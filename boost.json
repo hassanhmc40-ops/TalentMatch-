@@ -1,9 +1,17 @@
 {
     "agents": [
-        "opencode"
+        "cursor",
+        "opencode",
+        "antigravity"
     ],
     "cloud": false,
+    "guidelines": true,
     "mcp": true,
     "nightwatch": false,
-    "sail": false
+    "sail": false,
+    "skills": [
+        "laravel-best-practices",
+        "pest-testing",
+        "tailwindcss-development"
+    ]
 }

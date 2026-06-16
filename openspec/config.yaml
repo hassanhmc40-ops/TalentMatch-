@@ -1,20 +1,249 @@
 schema: spec-driven
 
-# Project context (optional)
-# This is shown to AI when creating artifacts.
-# Add your tech stack, conventions, style guides, domain knowledge, etc.
-# Example:
-#   context: |
-#     Tech stack: TypeScript, React, Node.js
-#     We use conventional commits
-#     Domain: e-commerce platform
+context: |
+  Project name: TalentMatch
 
-# Per-artifact rules (optional)
-# Add custom rules for specific artifacts.
-# Example:
-#   rules:
-#     proposal:
-#       - Keep proposals under 500 words
-#       - Always include a "Non-goals" section
-#     tasks:
-#       - Break tasks into chunks of max 2 hours
+  Project type:
+    Internal Laravel application for Moroccan startup HR teams.
+    The app helps HR agents preselect candidates by analyzing CV text against job offers using AI.
+
+  Main business goal:
+    Reduce repetitive and subjective CV screening work by giving the HR agent a structured candidate analysis, a matching score, a typed recommendation, and a contextual conversational assistant.
+
+  Users:
+    - HR agent / authenticated user.
+    - Each user owns their job offers, candidates, analyses, and conversations.
+
+  Language:
+    - Main UI and business wording should be French.
+    - Technical code, classes, migrations, and database names should use clear English or consistent French naming.
+    - Avoid mixing random languages in domain names.
+
+  Tech stack:
+    - Laravel
+    - Laravel Breeze or Laravel authentication starter
+    - MySQL
+    - Eloquent ORM
+    - Form Requests
+    - Jobs and Queues
+    - laravel/ai SDK
+    - Laravel Boost as dev dependency
+    - Pest or PHPUnit for tests
+    - Debugbar for checking N+1 issues during development
+
+  Required AI architecture:
+    TalentMatch has two mandatory AI layers.
+
+    Layer 1: Structured CV analysis
+      - When a CV is submitted against a job offer, the system must call the AI with a strict JSON schema.
+      - The AI response must respect the structured output contract.
+      - The response must be validated before saving.
+      - The analysis must be saved in the database as typed and casted fields.
+      - The matching score must be an integer between 0 and 100.
+      - The recommendation must be one of: convoquer, attente, rejeter.
+      - Invalid or incomplete AI responses must not silently create corrupted analyses.
+
+    Layer 2: Conversational agent with tools and memory
+      - The assistant must answer HR questions about analyzed candidates.
+      - The assistant must use real Laravel tools / function calling to retrieve data from the database.
+      - The assistant must not invent scores, missing skills, job requirements, or comparison results.
+      - Conversation memory must be persisted using the laravel/ai SDK conversation memory tables.
+      - Follow-up questions must reuse the current conversation context.
+
+  Structured output contract:
+    {
+      "competences_extraites": ["string"],
+      "annees_experience": "integer",
+      "niveau_etudes": "string",
+      "langues": ["string"],
+      "matching_score": "integer 0-100",
+      "points_forts": ["string"],
+      "lacunes": ["string"],
+      "competences_manquantes": ["string"],
+      "recommandation": "enum: convoquer | attente | rejeter",
+      "justification": "string"
+    }
+
+  Mandatory tools for the conversational agent:
+    - getCandidateAnalysis(int candidatId): retrieves the full candidate analysis from the database.
+    - getJobRequirements(int offreId): retrieves job offer criteria from the database.
+    - compareCandidates(int id1, int id2): compares two candidate analyses for the same offer.
+
+  Main user stories:
+    Authentication:
+      - US1: HR user can register, login, and logout.
+      - Offers and analyses must be attached to the authenticated user.
+
+    Job offers:
+      - US2: HR user can create a job offer with title, description, required skills, and minimum experience level.
+      - US3: HR user can list their job offers with the number of analyzed candidates for each offer.
+      - US4: HR user can open a job offer and see its criteria and submitted candidates with matching scores.
+
+    Candidate analysis:
+      - US5: HR user can submit a candidate name and CV text against a job offer.
+      - US6: The system performs structured AI analysis and stores extracted skills, experience, education, languages, score, strengths, gaps, missing skills, recommendation, and justification.
+      - US7: HR user can view a readable candidate analysis detail page.
+      - US8: HR user can clearly see the typed recommendation: À convoquer, En attente, À rejeter.
+
+    Conversational assistant:
+      - US9: HR user can ask natural language questions about an analyzed candidate.
+      - US10: Assistant remembers the current conversation context.
+      - US11: Assistant uses Laravel tools to retrieve real offer, analysis, score, gaps, and comparison data.
+
+    Bonus:
+      - Compare two candidates analyzed for the same offer.
+      - Rank candidates of an offer by matching score descending.
+
+  Required domain model:
+    User:
+      - owns many job offers.
+      - owns the data through job offers.
+      - candidate does not need a direct relation with user if access is already scoped through offer.
+
+    Offre / JobOffer:
+      - belongs to user.
+      - has title, description, required skills, minimum experience level.
+      - has many candidate analyses.
+      - required skills should be cast as array.
+
+    Candidat / Candidate:
+      - represents candidate identity and CV text.
+      - should be linked to analyses.
+      - avoid unnecessary direct user relation unless required by implementation.
+
+    AnalyseCandidat / CandidateAnalysis:
+      - belongs to job offer.
+      - belongs to candidate.
+      - stores structured AI output.
+      - stores matching score and recommendation.
+      - array fields must use Eloquent casts.
+      - recommendation should use an enum cast.
+
+    Conversation / Message:
+      - use laravel/ai SDK memory tables when available.
+      - conversation must be linked to candidate analysis or enough context to answer follow-up questions correctly.
+
+  Required technical concepts:
+    - Jobs and Queues are mandatory for CV analysis.
+    - CV analysis must run in background; the page must not freeze.
+    - Eloquent casts are mandatory for arrays and recommendation enum.
+    - Form Requests are mandatory for job offer creation/update and CV submission.
+    - Tools / function calling are mandatory for the assistant.
+    - Conversation memory is mandatory and must be persisted.
+    - Avoid N+1 queries using eager loading where needed.
+    - Handle edge cases explicitly.
+
+  Mandatory edge cases:
+    - Empty CV text.
+    - Empty candidate name.
+    - Job offer without required skills.
+    - AI response outside the JSON schema.
+    - Matching score outside 0-100.
+    - Invalid recommendation enum.
+    - Asking the assistant about a candidate the current user does not own.
+    - Comparing candidates from different job offers.
+    - Queue job failure.
+    - Duplicate candidate submission for the same offer.
+    - Very long CV text.
+
+  Security and access rules:
+    - Every offer must belong to the authenticated user.
+    - A user must not access another user's offers, candidates, analyses, or conversations.
+    - Do not trust IDs from requests without authorization checks.
+    - Use policies or scoped queries where appropriate.
+    - Do not expose raw AI prompts or sensitive internal traces in normal UI.
+    - Store only necessary CV data.
+
+  Evaluation requirements:
+    - Live demo must show the full workflow.
+    - Must show one OpenSpec spec file.
+    - Must explain what the coding agent must not do.
+    - Must show Laravel Boost usage.
+    - Must show a commit with explicit AI usage mention.
+    - Must show the structured JSON contract.
+    - Must explain why the score cannot be a simple if/else.
+    - Must show a tool call in action.
+    - Must explain hallucination risk if the assistant answers without tools.
+    - Must show conversation memory with two follow-up questions on the same candidate.
+
+  Repository deliverables:
+    - GitHub repository.
+    - Minimum 20 commits.
+    - Daily commits.
+    - Commit messages must be explicit and mention AI usage when AI helped.
+    - Required branches:
+      - feature/offres-crud
+      - feature/analyse-ia
+      - feature/agent-conversationnel
+    - Jira board with columns: To Do, In Progress, En validation, Done.
+    - All user stories translated into Jira tickets.
+    - MCD and MLD delivered before coding.
+    - specs/ directory committed.
+    - README.md committed.
+    - AGENTS.md committed at project root.
+
+  Architectural decisions:
+    - Use queue/job for AI analysis because AI calls can be slow and must not block the request.
+    - Use structured output because HR decisions need typed, reliable, explainable data.
+    - Use tools for assistant answers because the assistant must read real database data instead of guessing.
+    - Use memory because HR users need follow-up questions without repeating candidate context.
+    - Use casts and enums because AI output must become safe Laravel domain data.
+    - Use specs before implementation because the coding agent must build against explicit requirements, not vague prompts.
+
+  Do not do:
+    - Do not calculate the final score with hardcoded if/else rules only.
+    - Do not let the assistant answer from memory when database tools are required.
+    - Do not save unvalidated AI JSON.
+    - Do not block the UI while AI analysis runs.
+    - Do not create direct Candidate -> User relation unless there is a justified need; access should normally be scoped through JobOffer.
+    - Do not mix candidates from different offers in comparison.
+    - Do not ignore failed queue jobs.
+    - Do not create features before their OpenSpec specification exists.
+    - Do not skip authorization checks.
+    - Do not create N+1 queries in offer detail or candidate listing pages.
+
+rules:
+  proposal:
+    - Start with the business problem and the HR workflow.
+    - Include the exact user stories affected by the change.
+    - Clearly separate in-scope and out-of-scope work.
+    - Mention mandatory AI-assisted workflow requirements when relevant.
+    - Include what the coding agent must not do.
+    - Include risks: hallucination, invalid AI JSON, slow AI calls, unauthorized data access.
+    - Keep the proposal focused on the feature, not on unrelated polish.
+
+  specs:
+    - Use clear MUST/SHALL requirements.
+    - Use Given/When/Then scenarios.
+    - Include authorization scenarios for every user-owned resource.
+    - Include validation error scenarios.
+    - Include edge cases from the project context when relevant.
+    - For AI features, specify the exact JSON contract and failure behavior.
+    - For assistant features, specify which Laravel tool must be called.
+    - For conversation features, specify how memory is persisted and reused.
+    - Do not write vague requirements like "AI should work well".
+    - Do not allow assistant answers based only on guessed context.
+
+  design:
+    - Include database tables, relationships, casts, and enums.
+    - Include Laravel classes to create or modify: models, migrations, controllers, jobs, services, tools, requests, policies, views.
+    - Include queue flow for candidate analysis.
+    - Include structured output validation flow.
+    - Include agent tool-calling flow.
+    - Include conversation memory flow.
+    - Include authorization strategy.
+    - Include N+1 prevention strategy.
+    - Include error handling strategy for failed AI calls and invalid schema responses.
+    - Explain why each important architectural decision is chosen.
+
+  tasks:
+    - Organize tasks by implementation order.
+    - Include database/migration tasks before model/controller tasks.
+    - Include Form Request validation tasks.
+    - Include tests for happy paths and edge cases.
+    - Include queue worker and failed job handling tasks.
+    - Include AI structured output contract tests or validation tests.
+    - Include tool/function calling tests where possible.
+    - Include UI verification tasks.
+    - Include README and demo preparation tasks.
+    - Include a final manual QA checklist.
