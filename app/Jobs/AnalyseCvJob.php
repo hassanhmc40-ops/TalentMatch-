@@ -17,6 +17,10 @@ class AnalyseCvJob implements ShouldQueue
 {
     use Queueable;
 
+    public int $tries = 3;
+
+    public array $backoff = [30];
+
     public function __construct(
         public readonly int $candidateId,
         public readonly int $jobOfferId,
@@ -65,16 +69,21 @@ class AnalyseCvJob implements ShouldQueue
                 'error' => $e->getMessage(),
             ]);
 
-            if ($this->attempts() < 3) {
-                $this->release(30);
-            } else {
-                CandidateAnalysis::query()
-                    ->where('job_offer_id', $this->jobOfferId)
-                    ->where('candidate_id', $this->candidateId)
-                    ->update(['status' => 'failed']);
-
-                $this->fail($e);
-            }
+            $this->release($this->backoff[0]);
         }
+    }
+
+    public function failed(\Throwable $e): void
+    {
+        Log::error('Analyse CV : la tâche a échoué après tous les essais.', [
+            'candidate_id' => $this->candidateId,
+            'job_offer_id' => $this->jobOfferId,
+            'error' => $e->getMessage(),
+        ]);
+
+        CandidateAnalysis::query()
+            ->where('job_offer_id', $this->jobOfferId)
+            ->where('candidate_id', $this->candidateId)
+            ->update(['status' => 'failed']);
     }
 }
