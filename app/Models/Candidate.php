@@ -6,6 +6,11 @@ use Database\Factories\CandidateFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
+/**
+ * @property int $id
+ * @property string $name
+ * @property string $cv_text
+ */
 class Candidate extends Model
 {
     /** @use HasFactory<CandidateFactory> */
