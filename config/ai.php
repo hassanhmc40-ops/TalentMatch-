@@ -31,6 +31,23 @@ return [
     |
     */
 
+    /*
+    |--------------------------------------------------------------------------
+    | Conversation Memory Tables
+    |--------------------------------------------------------------------------
+    |
+    | Table names used by the SDK's RemembersConversations trait for
+    | persisting conversation history between agent turns.
+    |
+    */
+
+    'conversations' => [
+        'tables' => [
+            'conversations' => env('AI_CONVERSATIONS_TABLE', 'agent_conversations'),
+            'messages' => env('AI_CONVERSATION_MESSAGES_TABLE', 'agent_conversation_messages'),
+        ],
+    ],
+
     'caching' => [
         'embeddings' => [
             'cache' => false,

@@ -7,6 +7,7 @@ use Database\Factories\CandidateAnalysisFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
  * @property array $extracted_skills
@@ -93,5 +94,10 @@ class CandidateAnalysis extends Model
     public function candidate(): BelongsTo
     {
         return $this->belongsTo(Candidate::class);
+    }
+
+    public function conversations(): HasMany
+    {
+        return $this->hasMany(AgentConversation::class, 'candidate_analysis_id');
     }
 }

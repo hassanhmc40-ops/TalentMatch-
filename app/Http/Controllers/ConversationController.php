@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Ai\Agents\ConversationalAgent;
+use App\Models\AgentConversation;
 use App\Models\Candidate;
 use App\Models\CandidateAnalysis;
 use App\Models\JobOffer;
@@ -39,19 +40,15 @@ class ConversationController extends Controller
             ->firstOrFail();
 
         $conversationId = 'candidate-analysis-'.$analysis->id;
-        $systemContext = sprintf(
-            "Contexte : Le recruteur consulte l'analyse du candidat '%s' pour l'offre '%s'. Score : %d/100. Recommandation : %s.",
-            $candidat->name,
-            $offre->title,
-            $analysis->matching_score,
-            $analysis->recommendation->value,
-        );
 
         $agent = ConversationalAgent::make()
-            ->conversation($conversationId)
-            ->systemContext($systemContext);
+            ->continue($conversationId, auth()->user());
 
-        $response = $agent->send($validated['message']);
+        $response = $agent->prompt($validated['message']);
+
+        AgentConversation::where('id', $conversationId)
+            ->whereNull('candidate_analysis_id')
+            ->update(['candidate_analysis_id' => $analysis->id]);
 
         return redirect()
             ->route('conversations.show', [$offre, $candidat])
