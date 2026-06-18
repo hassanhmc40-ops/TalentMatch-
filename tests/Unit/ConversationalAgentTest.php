@@ -41,3 +41,19 @@ test('ConversationalAgent instructions are set', function () {
     $agent = new ConversationalAgent;
     expect((string) $agent->instructions())->not->toBeEmpty();
 });
+
+test('ConversationalAgent instructions are in French', function () {
+    $instructions = (string) (new ConversationalAgent)->instructions();
+
+    expect($instructions)->toContain('assistant RH');
+    expect($instructions)->toContain('recruteurs');
+    expect($instructions)->toContain('candidats');
+});
+
+test('ConversationalAgent instructions forbid inventing data without tools', function () {
+    $instructions = (string) (new ConversationalAgent)->instructions();
+
+    expect($instructions)->toContain('N\'invente jamais');
+    expect($instructions)->toContain('outils');
+    expect($instructions)->toContain('DOIS utiliser');
+});

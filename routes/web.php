@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\ConversationController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\JobOfferController;
 use App\Http\Controllers\ProfileController;
@@ -28,6 +29,14 @@ Route::middleware('auth')->group(function () {
 
     Route::post('offres/{offre}/candidats', [JobOfferController::class, 'submitCandidate'])
         ->name('offres.candidats.submit')
+        ->middleware('verified');
+
+    Route::get('conversations/{offre}/{candidat}', [ConversationController::class, 'show'])
+        ->name('conversations.show')
+        ->middleware('verified');
+
+    Route::post('conversations/{offre}/{candidat}', [ConversationController::class, 'store'])
+        ->name('conversations.store')
         ->middleware('verified');
 });
 

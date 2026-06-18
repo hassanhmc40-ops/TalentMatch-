@@ -59,18 +59,22 @@
                 @if ($offre->candidateAnalyses->isEmpty())
                     <p class="text-neutral-500 text-sm py-4 text-center">Aucun candidat analysé pour cette offre.</p>
                 @else
-                    <x-table
-                        :headers="[
+                    @php
+                        $headers = [
                             ['key' => 'candidate', 'label' => 'Candidat'],
                             ['key' => 'score', 'label' => 'Score'],
                             ['key' => 'recommendation', 'label' => 'Recommandation'],
-                        ]"
-                        :rows="$offre->candidateAnalyses->map(fn($a) => [
+                            ['key' => 'actions', 'label' => ''],
+                        ];
+
+                        $rows = $offre->candidateAnalyses->map(fn($a) => [
                             'candidate' => $a->candidate->name,
                             'score' => $a->matching_score . '%',
                             'recommendation' => $a->recommendation?->label() ?? 'Non défini',
-                        ])"
-                    />
+                            'actions' => '<a href="' . route('conversations.show', [$offre, $a->candidate]) . '" class="text-primary-600 hover:text-primary-700 text-sm font-medium">Assistant →</a>',
+                        ]);
+                    @endphp
+                    <x-table :headers="$headers" :rows="$rows" />
                 @endif
             </x-card>
         </div>
