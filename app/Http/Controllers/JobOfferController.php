@@ -7,6 +7,16 @@ use App\Models\JobOffer;
 
 class JobOfferController extends Controller
 {
+    public function index()
+    {
+        $offers = JobOffer::query()
+            ->where('user_id', auth()->id())
+            ->orderByDesc('created_at')
+            ->paginate(10);
+
+        return view('offres.index', compact('offers'));
+    }
+
     public function create()
     {
         return view('offres.create');
@@ -22,7 +32,7 @@ class JobOfferController extends Controller
             'min_experience_years' => $request->min_experience_years,
         ]);
 
-        return redirect()->route('dashboard')
+        return redirect()->route('offres.index')
             ->with('success', "L'offre d'emploi a été créée avec succès.");
     }
 }

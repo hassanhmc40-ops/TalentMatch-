@@ -37,7 +37,7 @@ test('successful creation stores job offer with correct data', function () {
         'description' => 'Nous recherchons un développeur PHP expérimenté pour rejoindre notre équipe.',
         'required_skills' => ['PHP', 'Laravel', 'MySQL'],
         'min_experience_years' => 3,
-    ])->assertRedirect(route('dashboard'))
+    ])->assertRedirect(route('offres.index'))
         ->assertSessionHas('success', "L'offre d'emploi a été créée avec succès.");
 
     assertDatabaseHas('job_offers', [
