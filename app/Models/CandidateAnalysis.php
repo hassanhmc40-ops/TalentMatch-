@@ -26,6 +26,7 @@ class CandidateAnalysis extends Model
         'missing_skills',
         'recommendation',
         'justification',
+        'status',
     ];
 
     protected function casts(): array
@@ -39,6 +40,7 @@ class CandidateAnalysis extends Model
             'gaps' => 'array',
             'missing_skills' => 'array',
             'recommendation' => Recommendation::class,
+            'status' => 'string',
         ];
     }
 

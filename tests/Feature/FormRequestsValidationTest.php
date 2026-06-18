@@ -2,8 +2,6 @@
 
 use App\Http\Requests\StoreJobOfferRequest;
 use App\Http\Requests\SubmitCandidateRequest;
-use App\Models\Candidate;
-use App\Models\JobOffer;
 use App\Models\User;
 use Illuminate\Support\Facades\Validator;
 
@@ -70,10 +68,8 @@ test('StoreJobOfferRequest attributes returns French field names', function () {
 // ── SubmitCandidateRequest ──
 
 test('SubmitCandidateRequest accepts valid submission data', function () {
-    $jobOffer = JobOffer::factory()->create(['user_id' => $this->user->id]);
-
     $validator = Validator::make(
-        ['nom' => 'Jean Dupont', 'cv_text' => 'Expérience en PHP.', 'offre_id' => $jobOffer->id],
+        ['nom' => 'Jean Dupont', 'cv_text' => 'Expérience en PHP.'],
         (new SubmitCandidateRequest)->rules()
     );
 
@@ -81,10 +77,8 @@ test('SubmitCandidateRequest accepts valid submission data', function () {
 });
 
 test('SubmitCandidateRequest rejects empty name', function () {
-    $jobOffer = JobOffer::factory()->create(['user_id' => $this->user->id]);
-
     $validator = Validator::make(
-        ['nom' => '', 'cv_text' => 'Expérience en PHP.', 'offre_id' => $jobOffer->id],
+        ['nom' => '', 'cv_text' => 'Expérience en PHP.'],
         (new SubmitCandidateRequest)->rules()
     );
 
@@ -93,86 +87,35 @@ test('SubmitCandidateRequest rejects empty name', function () {
 });
 
 test('SubmitCandidateRequest rejects empty CV text', function () {
-    $jobOffer = JobOffer::factory()->create(['user_id' => $this->user->id]);
-
     $validator = Validator::make(
-        ['nom' => 'Jean Dupont', 'cv_text' => '', 'offre_id' => $jobOffer->id],
+        ['nom' => 'Jean Dupont', 'cv_text' => ''],
         (new SubmitCandidateRequest)->rules()
     );
 
     expect($validator->fails())->toBeTrue();
     expect($validator->errors()->has('cv_text'))->toBeTrue();
-});
-
-test('SubmitCandidateRequest rejects non-existent offre_id', function () {
-    $validator = Validator::make(
-        ['nom' => 'Jean Dupont', 'cv_text' => 'Expérience en PHP.', 'offre_id' => 99999],
-        (new SubmitCandidateRequest)->rules()
-    );
-
-    expect($validator->fails())->toBeTrue();
-    expect($validator->errors()->has('offre_id'))->toBeTrue();
 });
 
 test('SubmitCandidateRequest rejects CV text exceeding 50000 characters', function () {
-    $jobOffer = JobOffer::factory()->create(['user_id' => $this->user->id]);
-
     $validator = Validator::make(
-        ['nom' => 'Jean Dupont', 'cv_text' => str_repeat('a', 50001), 'offre_id' => $jobOffer->id],
+        ['nom' => 'Jean Dupont', 'cv_text' => str_repeat('a', 50001)],
         (new SubmitCandidateRequest)->rules()
     );
 
     expect($validator->fails())->toBeTrue();
     expect($validator->errors()->has('cv_text'))->toBeTrue();
-});
-
-test('SubmitCandidateRequest withValidator rejects duplicate candidate name', function () {
-    $jobOffer = JobOffer::factory()->create(['user_id' => $this->user->id]);
-    Candidate::factory()->create(['name' => 'Jean Dupont']);
-
-    $request = new SubmitCandidateRequest;
-    $request->merge(['nom' => 'Jean Dupont', 'cv_text' => 'Expérience.', 'offre_id' => $jobOffer->id]);
-
-    $validator = Validator::make(
-        $request->all(),
-        $request->rules()
-    );
-
-    $request->withValidator($validator);
-
-    expect($validator->fails())->toBeTrue();
-    expect($validator->errors()->has('nom'))->toBeTrue();
-});
-
-test('SubmitCandidateRequest withValidator allows different candidate name', function () {
-    $jobOffer = JobOffer::factory()->create(['user_id' => $this->user->id]);
-    Candidate::factory()->create(['name' => 'Marie Curie']);
-
-    $request = new SubmitCandidateRequest;
-    $request->merge(['nom' => 'Jean Dupont', 'cv_text' => 'Expérience.', 'offre_id' => $jobOffer->id]);
-
-    $validator = Validator::make(
-        $request->all(),
-        $request->rules()
-    );
-
-    $request->withValidator($validator);
-
-    expect($validator->passes())->toBeTrue();
 });
 
 test('SubmitCandidateRequest messages are in French', function () {
     $messages = (new SubmitCandidateRequest)->messages();
 
     expect($messages['nom.required'])->toBe('Le nom du candidat est obligatoire.')
-        ->and($messages['cv_text.required'])->toBe('Le texte du CV est obligatoire.')
-        ->and($messages['offre_id.exists'])->toBe("L'offre d'emploi sélectionnée est invalide.");
+        ->and($messages['cv_text.required'])->toBe('Le texte du CV est obligatoire.');
 });
 
 test('SubmitCandidateRequest attributes returns French field names', function () {
     $attrs = (new SubmitCandidateRequest)->attributes();
 
     expect($attrs['nom'])->toBe('nom du candidat')
-        ->and($attrs['cv_text'])->toBe('texte du CV')
-        ->and($attrs['offre_id'])->toBe("offre d'emploi");
+        ->and($attrs['cv_text'])->toBe('texte du CV');
 });

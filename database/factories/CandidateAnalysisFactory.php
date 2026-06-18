@@ -49,6 +49,7 @@ class CandidateAnalysisFactory extends Factory
                 Recommendation::Rejeter,
             ]),
             'justification' => fake()->realTextBetween(50, 150),
+            'status' => 'completed',
         ];
     }
 }
