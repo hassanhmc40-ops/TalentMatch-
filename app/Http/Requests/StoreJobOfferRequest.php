@@ -2,14 +2,16 @@
 
 namespace App\Http\Requests;
 
+use App\Models\JobOffer;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Support\Facades\Gate;
 
 class StoreJobOfferRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return true;
+        return Gate::allows('create', JobOffer::class);
     }
 
     /**
@@ -24,6 +26,18 @@ class StoreJobOfferRequest extends FormRequest
             'required_skills.*' => ['required', 'string', 'max:100', 'distinct'],
             'min_experience_years' => ['required', 'integer', 'min:0', 'max:50'],
         ];
+    }
+
+    protected function prepareForValidation(): void
+    {
+        $this->merge([
+            'title' => trim($this->title ?? ''),
+            'description' => trim($this->description ?? ''),
+            'required_skills' => array_filter(
+                $this->required_skills ?? [],
+                fn ($skill) => trim($skill) !== ''
+            ),
+        ]);
     }
 
     /**
@@ -44,6 +58,19 @@ class StoreJobOfferRequest extends FormRequest
             'min_experience_years.integer' => "L'année d'expérience doit être un nombre entier.",
             'min_experience_years.min' => "L'année d'expérience minimale doit être 0 ou plus.",
             'min_experience_years.max' => "L'année d'expérience maximale est de 50 ans.",
+        ];
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    public function attributes(): array
+    {
+        return [
+            'title' => 'titre',
+            'description' => 'description',
+            'required_skills' => 'compétences',
+            'min_experience_years' => 'années d\'expérience',
         ];
     }
 }
