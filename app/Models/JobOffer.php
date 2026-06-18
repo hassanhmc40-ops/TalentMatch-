@@ -2,12 +2,15 @@
 
 namespace App\Models;
 
+use App\Policies\JobOfferPolicy;
 use Database\Factories\JobOfferFactory;
+use Illuminate\Database\Eloquent\Attributes\UsePolicy;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
+#[UsePolicy(JobOfferPolicy::class)]
 class JobOffer extends Model
 {
     /** @use HasFactory<JobOfferFactory> */

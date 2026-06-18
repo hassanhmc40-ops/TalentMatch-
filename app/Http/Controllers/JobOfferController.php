@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreJobOfferRequest;
 use App\Models\JobOffer;
+use Illuminate\Support\Facades\Gate;
 
 class JobOfferController extends Controller
 {
@@ -15,6 +16,15 @@ class JobOfferController extends Controller
             ->paginate(10);
 
         return view('offres.index', compact('offers'));
+    }
+
+    public function show(JobOffer $offre)
+    {
+        Gate::authorize('view', $offre);
+
+        $offre->load('candidateAnalyses.candidate');
+
+        return view('offres.show', compact('offre'));
     }
 
     public function create()
