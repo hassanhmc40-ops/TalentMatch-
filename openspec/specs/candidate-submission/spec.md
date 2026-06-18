@@ -55,10 +55,12 @@ The system SHALL validate that the submitted job offer ID exists in the database
 
 The system SHALL reject a candidate submission when a candidate with the same name has already been submitted for the same job offer.
 
-#### Scenario: Duplicate name for same offer is rejected
+#### Scenario: Duplicate name for same offer redirects with validation error
 - **WHEN** an HR user submits a candidate named "Jean Dupont" for offer ID 1
 - **AND** a candidate with the same name already exists for offer ID 1
-- **THEN** the system SHALL display a validation error: "Ce candidat a déjà été soumis pour cette offre."
+- **THEN** the system SHALL redirect to `route('offres.show', $offre)` with a validation error
+- **AND** the error message SHALL read: "Ce candidat a déjà été soumis pour cette offre."
+- **AND** SHALL NOT create a duplicate CandidateAnalysis record
 
 #### Scenario: Same name for different offer is accepted
 - **WHEN** an HR user submits a candidate named "Jean Dupont" for offer ID 2
@@ -86,6 +88,20 @@ The system SHALL display all validation error messages and use French attribute 
 - **WHEN** a field fails a rule and the generic `:attribute` placeholder is used
 - **THEN** the attribute name SHALL be French: "nom du candidat", "texte du CV", "offre d'emploi"
 
+### Requirement: Submission is gated by offer ownership
+
+The system SHALL reject candidate submissions when the authenticated user does not own the target job offer.
+
+#### Scenario: Own offer passes authorization
+- **WHEN** an authenticated user submits a candidate for their own job offer
+- **THEN** the system SHALL proceed with validation
+
+#### Scenario: Another user's offer returns 403
+- **WHEN** an authenticated user submits a candidate for a job offer belonging to another user
+- **THEN** the system SHALL return a 403 Forbidden response
+- **AND** SHALL NOT create a Candidate or CandidateAnalysis record
+- **AND** SHALL NOT dispatch any queue job
+
 ### Requirement: Analysis is dispatched via queue after submission validation
 
 The system SHALL dispatch a queue job to perform AI analysis after the form validation passes and the Candidate record is created.
@@ -95,6 +111,11 @@ The system SHALL dispatch a queue job to perform AI analysis after the form vali
 - **THEN** the system SHALL create a Candidate record
 - **AND** SHALL dispatch a queue job (e.g., `AnalyseCvJob`) with the candidate ID and job offer ID
 - **AND** SHALL return a success response to the user without waiting for the AI analysis to complete
+
+#### Scenario: Flash message on successful submission
+- **WHEN** an HR user submits valid candidate data
+- **THEN** the system SHALL redirect to the offer detail page
+- **AND** SHALL flash a success message: "Candidature soumise. L'analyse est en cours."
 
 #### Scenario: Queue job receives validation-gated analysis
 - **WHEN** the queue job receives the AI response

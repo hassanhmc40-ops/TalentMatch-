@@ -48,7 +48,12 @@
             {{-- Candidate Analyses --}}
             <div class="mt-8 bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="p-6 text-gray-900 dark:text-gray-100">
-                    <h3 class="text-lg font-semibold mb-4">Candidats analysés</h3>
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-lg font-semibold">Candidats analysés</h3>
+                        <a href="{{ route('offres.candidats.create', $offre) }}" class="text-sm text-indigo-600 dark:text-indigo-400 hover:underline">
+                            Soumettre un candidat
+                        </a>
+                    </div>
 
                     @if ($offre->candidateAnalyses->isEmpty())
                         <p class="text-gray-500 dark:text-gray-400">Aucun candidat analysé pour cette offre.</p>

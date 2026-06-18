@@ -103,3 +103,46 @@ test('user cannot submit candidate for another users offer', function () {
 
     $response->assertForbidden();
 });
+
+test('submission form page renders for authorized user', function () {
+    actingAs($this->user);
+
+    $response = $this->get(route('offres.candidats.create', $this->jobOffer));
+
+    $response->assertSuccessful();
+    $response->assertSee('Soumettre un candidat');
+    $response->assertSee($this->jobOffer->title);
+    $response->assertSee('Nom du candidat');
+    $response->assertSee('Texte du CV');
+    $response->assertSee('Soumettre le candidat');
+    $response->assertSeeText("Retour à l'offre");
+});
+
+test('submission form page returns 403 for unauthorized user', function () {
+    $otherUser = User::factory()->create(['email_verified_at' => now()]);
+
+    actingAs($otherUser);
+
+    $response = $this->get(route('offres.candidats.create', $this->jobOffer));
+
+    $response->assertForbidden();
+});
+
+test('guest cannot view submission form', function () {
+    $response = $this->get(route('offres.candidats.create', $this->jobOffer));
+
+    $response->assertRedirect(route('login'));
+});
+
+test('validation errors redirect back to form with input preserved', function () {
+    actingAs($this->user);
+
+    $response = $this->from(route('offres.candidats.create', $this->jobOffer))
+        ->post(route('offres.candidats.submit', $this->jobOffer), [
+            'nom' => '',
+            'cv_text' => '',
+        ]);
+
+    $response->assertRedirect(route('offres.candidats.create', $this->jobOffer));
+    $response->assertSessionHasErrors(['nom', 'cv_text']);
+});
