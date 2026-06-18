@@ -127,15 +127,24 @@ The system SHALL dispatch a queue job to perform AI analysis after the form vali
 
 The system SHALL handle queue job failures without data corruption and surface the error to the user.
 
-#### Scenario: Job fails and candidate shows pending analysis
-- **WHEN** the `AnalyseCvJob` fails (validation error, AI timeout, or exception)
-- **THEN** the system SHALL NOT create a corrupted `CandidateAnalysis` record
-- **AND** the candidate SHALL remain visible in the offer detail with a "Analyse en cours" or "Échec de l'analyse" status
+#### Scenario: Job fails validation and analysis shows failed
+- **WHEN** the `AnalyseCvJob` receives an AI response that fails structured validation
+- **THEN** the job SHALL NOT retry
+- **AND** SHALL update CandidateAnalysis status to `failed`
+- **AND** SHALL log the validation errors
+- **AND** the candidate SHALL be visible in the offer detail with a "Échec de l'analyse" status
 
-#### Scenario: Failed job is released for retry
-- **WHEN** the `AnalyseCvJob` fails due to a transient error (AI timeout, network error)
-- **THEN** the job SHALL be released back to the queue with a delay
-- **AND** the system SHALL use the default Laravel job retry mechanism
+#### Scenario: Job exhausts retries and analysis shows failed
+- **WHEN** the `AnalyseCvJob` fails due to transient errors (AI timeout, network error) on all 3 attempts
+- **THEN** the job SHALL update CandidateAnalysis status to `failed`
+- **AND** SHALL be recorded in the `failed_jobs` table
+- **AND** the candidate SHALL be visible in the offer detail with a "Échec de l'analyse" status
+
+#### Scenario: Job succeeds mid-retry
+- **WHEN** the `AnalyseCvJob` fails on attempt 1 or 2 due to a transient error
+- **AND** succeeds on a subsequent attempt
+- **THEN** CandidateAnalysis status SHALL be set to `completed`
+- **AND** the analysis data SHALL be persisted normally
 
 ### Requirement: Analysis status is tracked
 

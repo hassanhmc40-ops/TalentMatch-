@@ -103,3 +103,77 @@ test('AnalyseCvJob sets failed status on validation failure', function () {
 
     expect($analysis->status)->toBe('failed');
 });
+
+test('AnalyseCvJob calls AI agent with prompt containing candidate CV and offer details', function () {
+    $jobOffer = JobOffer::factory()->create(['user_id' => $this->user->id]);
+    $candidate = Candidate::factory()->create([
+        'cv_text' => 'Expert PHP depuis 5 ans.',
+    ]);
+
+    $validResponse = [
+        'competences_extraites' => ['PHP'],
+        'annees_experience' => 5,
+        'niveau_etudes' => 'Bac+5',
+        'langues' => ['Français'],
+        'matching_score' => 50,
+        'points_forts' => ['Expérience'],
+        'lacunes' => [],
+        'competences_manquantes' => [],
+        'recommandation' => 'attente',
+        'justification' => 'Test.',
+    ];
+
+    CvAnalysisAgent::fake([$validResponse]);
+
+    $job = new AnalyseCvJob($candidate->id, $jobOffer->id);
+    $job->handle(
+        new ValidateStructuredAnalysis,
+        new PersistValidatedAnalysis(new ValidateStructuredAnalysis),
+    );
+
+    CvAnalysisAgent::assertPrompted(function (\Laravel\Ai\Prompts\AgentPrompt $prompt): bool {
+        return str_contains($prompt->prompt, 'Expert PHP depuis 5 ans.')
+            && str_contains($prompt->prompt, 'Analysez le CV suivant');
+    });
+});
+
+test('AnalyseCvJob has declarative retry properties', function () {
+    $candidate = Candidate::factory()->create();
+    $jobOffer = JobOffer::factory()->create(['user_id' => $this->user->id]);
+
+    $job = new AnalyseCvJob($candidate->id, $jobOffer->id);
+
+    expect($job->tries)->toBe(3);
+    expect($job->backoff)->toBe([30]);
+});
+
+test('AnalyseCvJob failed method sets analysis status to failed', function () {
+    $jobOffer = JobOffer::factory()->create(['user_id' => $this->user->id]);
+    $candidate = Candidate::factory()->create();
+
+    CandidateAnalysis::create([
+        'job_offer_id' => $jobOffer->id,
+        'candidate_id' => $candidate->id,
+        'status' => 'pending',
+        'extracted_skills' => [],
+        'years_experience' => 0,
+        'education_level' => '',
+        'languages' => [],
+        'matching_score' => 0,
+        'strengths' => [],
+        'gaps' => [],
+        'missing_skills' => [],
+        'recommendation' => 'attente',
+        'justification' => '',
+    ]);
+
+    $job = new AnalyseCvJob($candidate->id, $jobOffer->id);
+    $job->failed(new Exception('AI service unavailable'));
+
+    $analysis = CandidateAnalysis::query()
+        ->where('candidate_id', $candidate->id)
+        ->where('job_offer_id', $jobOffer->id)
+        ->first();
+
+    expect($analysis->status)->toBe('failed');
+});

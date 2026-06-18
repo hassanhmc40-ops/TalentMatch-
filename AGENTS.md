@@ -146,6 +146,19 @@ This project has domain-specific skills available in `**/skills/**`. You MUST ac
 
 - If you receive an "Illuminate\Foundation\ViteException: Unable to locate file in Vite manifest" error, you can run `npm run build` or ask the user to run `npm run dev` or `composer run dev`.
 
+=== queue/rules ===
+
+# Queue Worker
+
+- CV analysis runs asynchronously via `AnalyseCvJob` dispatched to the `database` queue driver.
+- Before processing jobs, run the migration if not already done: `php artisan migrate` (creates `jobs` and `failed_jobs` tables).
+- Start the worker with: `php artisan queue:work --tries=3 --backoff=30`.
+- The job has `$tries = 3` and `$backoff = [30]` declared inline; the `--tries` and `--backoff` flags on the worker command act as global overrides.
+- Failed jobs are recorded in the `failed_jobs` table. Inspect with `php artisan queue:failed`.
+- Retry a specific failed job: `php artisan queue:retry <id>`. Retry all: `php artisan queue:retry all`.
+- In development, the worker stays alive with `php artisan queue:work`.
+- Do NOT use `sync` driver for the `default` queue connection in production — analysis must remain async.
+
 === pint/core rules ===
 
 # Laravel Pint Code Formatter
