@@ -38,7 +38,11 @@
                             <tbody>
                                 @foreach ($offers as $offer)
                                     <tr class="border-b border-gray-100 dark:border-gray-700 last:border-0">
-                                        <td class="py-3 font-medium">{{ $offer->title }}</td>
+                                        <td class="py-3 font-medium">
+                                            <a href="{{ route('offres.show', $offer) }}" class="text-indigo-600 dark:text-indigo-400 hover:underline">
+                                                {{ $offer->title }}
+                                            </a>
+                                        </td>
                                         <td class="py-3 text-sm text-gray-600 dark:text-gray-400">
                                             {{ implode(', ', $offer->required_skills ?? []) }}
                                         </td>

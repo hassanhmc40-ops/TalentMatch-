@@ -20,7 +20,7 @@ class JobOfferPolicy
      */
     public function view(User $user, JobOffer $jobOffer): bool
     {
-        return false;
+        return $user->id === $jobOffer->user_id;
     }
 
     /**
