@@ -18,7 +18,7 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
     Route::resource('offres', JobOfferController::class)
-        ->only(['create', 'store'])
+        ->only(['index', 'create', 'store'])
         ->middleware('verified');
 });
 

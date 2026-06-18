@@ -12,7 +12,7 @@ class JobOfferPolicy
      */
     public function viewAny(User $user): bool
     {
-        return false;
+        return $user->hasVerifiedEmail();
     }
 
     /**

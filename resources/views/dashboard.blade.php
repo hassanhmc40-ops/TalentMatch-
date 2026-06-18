@@ -14,10 +14,20 @@
                 </div>
             @endif
 
-            <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
-                <div class="p-6 text-gray-900 dark:text-gray-100">
-                    {{ __("You're logged in!") }}
-                </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+                <a href="{{ route('offres.index') }}"
+                   class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg p-6 text-gray-900 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-700 transition block">
+                    <h3 class="text-lg font-semibold">Mes offres d'emploi</h3>
+                    <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Consultez et gérez vos offres d'emploi</p>
+                </a>
+
+                <a href="{{ route('offres.create') }}"
+                   class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg p-6 text-gray-900 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-700 transition block">
+                    <h3 class="text-lg font-semibold">Créer une offre</h3>
+                    <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Publiez une nouvelle offre d'emploi</p>
+                </a>
+
             </div>
         </div>
     </div>
