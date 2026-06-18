@@ -17,15 +17,20 @@ class CompareCandidates implements Tool
 
     public function handle(Request $request): Stringable|string
     {
-        $analysis1 = CandidateAnalysis::with('candidate')->find($request['analyse_id_1']);
-        $analysis2 = CandidateAnalysis::with('candidate')->find($request['analyse_id_2']);
+        $analysis1 = CandidateAnalysis::with('candidate')
+            ->whereHas('jobOffer', fn ($q) => $q->where('user_id', auth()->id()))
+            ->find($request['analyse_id_1']);
+
+        $analysis2 = CandidateAnalysis::with('candidate')
+            ->whereHas('jobOffer', fn ($q) => $q->where('user_id', auth()->id()))
+            ->find($request['analyse_id_2']);
 
         if (! $analysis1) {
-            return 'Première analyse non trouvée.';
+            return 'Analyse non trouvée ou accès non autorisé.';
         }
 
         if (! $analysis2) {
-            return 'Deuxième analyse non trouvée.';
+            return 'Analyse non trouvée ou accès non autorisé.';
         }
 
         if ($analysis1->job_offer_id !== $analysis2->job_offer_id) {

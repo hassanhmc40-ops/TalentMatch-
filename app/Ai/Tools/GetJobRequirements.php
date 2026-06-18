@@ -17,17 +17,20 @@ class GetJobRequirements implements Tool
 
     public function handle(Request $request): Stringable|string
     {
-        $offer = JobOffer::find($request['offre_id']);
+        $offer = JobOffer::query()
+            ->where('id', $request['offre_id'])
+            ->where('user_id', auth()->id())
+            ->first();
 
         if (! $offer) {
-            return 'Aucune offre trouvée pour cet identifiant.';
+            return 'Offre non trouvée ou accès non autorisé.';
         }
 
         return json_encode([
             'titre' => $offer->title,
             'description' => $offer->description,
             'competences_requises' => $offer->required_skills,
-            'annees_experience_minimum' => $offer->min_years_experience,
+            'annees_experience_minimum' => $offer->min_experience_years,
         ], JSON_UNESCAPED_UNICODE);
     }
 

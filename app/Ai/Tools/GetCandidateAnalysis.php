@@ -19,10 +19,11 @@ class GetCandidateAnalysis implements Tool
     {
         $analysis = CandidateAnalysis::with('candidate', 'jobOffer')
             ->where('candidate_id', $request['candidat_id'])
+            ->whereHas('jobOffer', fn ($q) => $q->where('user_id', auth()->id()))
             ->first();
 
         if (! $analysis) {
-            return 'Aucune analyse trouvée pour ce candidat.';
+            return 'Analyse non trouvée ou accès non autorisé.';
         }
 
         return json_encode([
