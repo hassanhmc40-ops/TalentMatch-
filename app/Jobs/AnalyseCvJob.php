@@ -33,8 +33,10 @@ class AnalyseCvJob implements ShouldQueue
         $candidate = Candidate::findOrFail($this->candidateId);
         $jobOffer = JobOffer::findOrFail($this->jobOfferId);
 
-        $prompt = sprintf(
-            "Analysez le CV suivant pour l'offre d'emploi ci-dessous et retournez l'analyse au format JSON structuré.\n\nCV du candidat :\n%s\n\nOffre d'emploi :\nTitre : %s\nDescription : %s\nCompétences requises : %s\nExpérience minimale : %d ans",
+        $fewShotExample = "Voici un exemple de CV et d'offre d'emploi avec la sortie JSON attendue :\n\n--- Exemple ---\nCV :\n\"Développeur PHP avec 3 ans d'expérience chez WebAgency. Compétences : PHP, MySQL, JavaScript, Laravel. Anglais courant. Bac+5 en informatique.\"\n\nOffre :\nTitre : Développeur Backend PHP\nDescription : Développement d'applications web en PHP et Laravel\nCompétences requises : PHP, Laravel, MySQL, Docker\nExpérience minimale : 2 ans\n\nSortie JSON attendue :\n{\n  \"competences_extraites\": [\"PHP\", \"MySQL\", \"JavaScript\", \"Laravel\"],\n  \"annees_experience\": 3,\n  \"niveau_etudes\": \"Bac+5\",\n  \"langues\": [\"Anglais\"],\n  \"matching_score\": 65,\n  \"points_forts\": [\"Maîtrise de PHP, Laravel et MySQL\", \"Expérience correspond au minimum requis\"],\n  \"lacunes\": [\"Pas d'expérience avec Docker\"],\n  \"competences_manquantes\": [\"Docker\"],\n  \"recommandation\": \"attente\",\n  \"justification\": \"Le candidat maîtrise 3 des 4 compétences requises et dépasse l'expérience minimale, mais Docker est manquant. Score de 65/100.\"\n}\n--- Fin de l'exemple ---\n\nAnalyse maintenant le CV suivant pour l'offre d'emploi ci-dessous et retourne l'analyse au format JSON structuré.\n";
+
+        $prompt = $fewShotExample.sprintf(
+            "CV du candidat :\n%s\n\nOffre d'emploi :\nTitre : %s\nDescription : %s\nCompétences requises : %s\nExpérience minimale : %d ans",
             $candidate->cv_text,
             $jobOffer->title,
             $jobOffer->description,
