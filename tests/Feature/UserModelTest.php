@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\User;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Laravel\Ai\Concerns\HasConversations;
 
 test('User model uses HasConversations trait', function () {
@@ -10,5 +11,5 @@ test('User model uses HasConversations trait', function () {
 
 test('User has conversations relationship', function () {
     $user = User::factory()->create(['email_verified_at' => now()]);
-    expect($user->conversations())->toBeInstanceOf(\Illuminate\Database\Eloquent\Relations\HasMany::class);
+    expect($user->conversations())->toBeInstanceOf(HasMany::class);
 });

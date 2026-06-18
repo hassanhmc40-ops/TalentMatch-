@@ -3,8 +3,13 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreJobOfferRequest;
+use App\Http\Requests\SubmitCandidateRequest;
+use App\Jobs\AnalyseCvJob;
+use App\Models\Candidate;
+use App\Models\CandidateAnalysis;
 use App\Models\JobOffer;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Str;
 
 class JobOfferController extends Controller
 {
@@ -44,5 +49,52 @@ class JobOfferController extends Controller
 
         return redirect()->route('offres.index')
             ->with('success', "L'offre d'emploi a été créée avec succès.");
+    }
+
+    public function submitCandidate(SubmitCandidateRequest $request, JobOffer $offre)
+    {
+        Gate::authorize('view', $offre);
+
+        $name = Str::lower(trim($request->nom));
+
+        $existingCandidate = Candidate::whereRaw('LOWER(TRIM(name)) = ?', [$name])->first();
+
+        if ($existingCandidate !== null) {
+            $existingAnalysis = CandidateAnalysis::query()
+                ->where('candidate_id', $existingCandidate->id)
+                ->where('job_offer_id', $offre->id)
+                ->exists();
+
+            if ($existingAnalysis) {
+                return redirect()->route('offres.show', $offre)
+                    ->withErrors(['nom' => 'Ce candidat a déjà été soumis pour cette offre.']);
+            }
+        }
+
+        $candidate = $existingCandidate ?? Candidate::create([
+            'name' => $request->nom,
+            'cv_text' => $request->cv_text,
+        ]);
+
+        CandidateAnalysis::create([
+            'job_offer_id' => $offre->id,
+            'candidate_id' => $candidate->id,
+            'status' => 'pending',
+            'extracted_skills' => [],
+            'years_experience' => 0,
+            'education_level' => '',
+            'languages' => [],
+            'matching_score' => 0,
+            'strengths' => [],
+            'gaps' => [],
+            'missing_skills' => [],
+            'recommendation' => 'attente',
+            'justification' => '',
+        ]);
+
+        AnalyseCvJob::dispatch($candidate->id, $offre->id);
+
+        return redirect()->route('offres.show', $offre)
+            ->with('success', 'Candidature soumise. L\'analyse est en cours.');
     }
 }

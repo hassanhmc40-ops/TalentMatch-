@@ -20,6 +20,10 @@ Route::middleware('auth')->group(function () {
     Route::resource('offres', JobOfferController::class)
         ->only(['index', 'create', 'store', 'show'])
         ->middleware('verified');
+
+    Route::post('offres/{offre}/candidats', [JobOfferController::class, 'submitCandidate'])
+        ->name('offres.candidats.submit')
+        ->middleware('verified');
 });
 
 require __DIR__.'/auth.php';
