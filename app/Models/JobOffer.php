@@ -10,6 +10,10 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
+/**
+ * @property array $required_skills
+ * @property int $min_experience_years
+ */
 #[UsePolicy(JobOfferPolicy::class)]
 class JobOffer extends Model
 {
@@ -30,6 +34,11 @@ class JobOffer extends Model
             'required_skills' => 'array',
             'min_experience_years' => 'integer',
         ];
+    }
+
+    public function skillCount(): int
+    {
+        return count($this->required_skills ?? []);
     }
 
     public function user(): BelongsTo
