@@ -1,52 +1,44 @@
 <x-app-layout>
     <x-slot name="header">
         <div class="flex items-center justify-between">
-            <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
-                Soumettre un candidat — {{ $offre->title }}
-            </h2>
-            <a href="{{ route('offres.show', $offre) }}" class="text-sm text-indigo-600 dark:text-indigo-400 hover:underline">
-                Retour à l'offre
+            <div>
+                <h2 class="font-semibold text-xl text-neutral-900 leading-tight">
+                    Soumettre un candidat
+                </h2>
+                <p class="text-sm text-neutral-500 mt-1">{{ $offre->title }}</p>
+            </div>
+            <a href="{{ route('offres.show', $offre) }}">
+                <x-button variant="outline" size="sm">Retour à l'offre</x-button>
             </a>
         </div>
     </x-slot>
 
-    <div class="py-12">
+    <div class="py-8">
         <div class="max-w-3xl mx-auto sm:px-6 lg:px-8">
+            <x-card>
+                @if (session('success'))
+                    <x-alert type="success" dismissible>{{ session('success') }}</x-alert>
+                @endif
 
-            @if (session('success'))
-                <div class="mb-4 p-4 text-sm font-medium text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/20 rounded-lg">
-                    {{ session('success') }}
-                </div>
-            @endif
+                <form method="POST" action="{{ route('offres.candidats.submit', $offre) }}" class="space-y-6">
+                    @csrf
 
-            <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
-                <div class="p-6 text-gray-900 dark:text-gray-100">
+                    <x-input name="nom" label="Nom du candidat" :value="old('nom')" :message="$errors->first('nom')" required maxlength="255" />
 
-                    <form method="POST" action="{{ route('offres.candidats.submit', $offre) }}" class="space-y-6">
-                        @csrf
+                    <div>
+                        <label for="cv_text" class="block text-sm font-medium text-neutral-700">Texte du CV</label>
+                        <textarea id="cv_text" name="cv_text" rows="12" required maxlength="50000"
+                            class="mt-1 block w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm text-neutral-900 shadow-sm transition duration-150 ease-in-out focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-0">{{ old('cv_text') }}</textarea>
+                        @if ($errors->first('cv_text'))
+                            <p class="mt-1 text-sm text-danger-600">{{ $errors->first('cv_text') }}</p>
+                        @endif
+                    </div>
 
-                        <div>
-                            <x-input-label for="nom" value="Nom du candidat" />
-                            <x-text-input id="nom" name="nom" type="text" class="mt-1 block w-full"
-                                :value="old('nom')" required maxlength="255" />
-                            <x-input-error :messages="$errors->get('nom')" class="mt-2" />
-                        </div>
-
-                        <div>
-                            <x-input-label for="cv_text" value="Texte du CV" />
-                            <textarea id="cv_text" name="cv_text" rows="12"
-                                class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                                required maxlength="50000">{{ old('cv_text') }}</textarea>
-                            <x-input-error :messages="$errors->get('cv_text')" class="mt-2" />
-                        </div>
-
-                        <div class="flex items-center justify-end">
-                            <x-primary-button>Soumettre le candidat</x-primary-button>
-                        </div>
-                    </form>
-
-                </div>
-            </div>
+                    <div class="flex items-center justify-end">
+                        <x-button>Soumettre le candidat</x-button>
+                    </div>
+                </form>
+            </x-card>
         </div>
     </div>
 </x-app-layout>
