@@ -9,6 +9,7 @@ use App\Models\Candidate;
 use App\Models\CandidateAnalysis;
 use App\Models\JobOffer;
 use App\Models\User;
+use Laravel\Ai\Prompts\AgentPrompt;
 
 beforeEach(function () {
     $this->user = User::factory()->create(['email_verified_at' => now()]);
@@ -131,9 +132,9 @@ test('AnalyseCvJob calls AI agent with prompt containing candidate CV and offer 
         new PersistValidatedAnalysis(new ValidateStructuredAnalysis),
     );
 
-    CvAnalysisAgent::assertPrompted(function (\Laravel\Ai\Prompts\AgentPrompt $prompt): bool {
+    CvAnalysisAgent::assertPrompted(function (AgentPrompt $prompt): bool {
         return str_contains($prompt->prompt, 'Expert PHP depuis 5 ans.')
-            && str_contains($prompt->prompt, 'Analysez le CV suivant');
+            && str_contains($prompt->prompt, 'Analyse maintenant le CV suivant');
     });
 });
 
@@ -176,4 +177,38 @@ test('AnalyseCvJob failed method sets analysis status to failed', function () {
         ->first();
 
     expect($analysis->status)->toBe('failed');
+});
+
+test('AnalyseCvJob prompt contains few-shot example with expected JSON output', function () {
+    $jobOffer = JobOffer::factory()->create(['user_id' => $this->user->id]);
+    $candidate = Candidate::factory()->create([
+        'cv_text' => 'Expert PHP depuis 5 ans.',
+    ]);
+
+    $validResponse = [
+        'competences_extraites' => ['PHP'],
+        'annees_experience' => 5,
+        'niveau_etudes' => 'Bac+5',
+        'langues' => ['Français'],
+        'matching_score' => 50,
+        'points_forts' => ['Expérience'],
+        'lacunes' => [],
+        'competences_manquantes' => [],
+        'recommandation' => 'attente',
+        'justification' => 'Test.',
+    ];
+
+    CvAnalysisAgent::fake([$validResponse]);
+
+    $job = new AnalyseCvJob($candidate->id, $jobOffer->id);
+    $job->handle(
+        new ValidateStructuredAnalysis,
+        new PersistValidatedAnalysis(new ValidateStructuredAnalysis),
+    );
+
+    CvAnalysisAgent::assertPrompted(function (AgentPrompt $prompt): bool {
+        return str_contains($prompt->prompt, '--- Exemple ---')
+            && str_contains($prompt->prompt, 'Sortie JSON attendue')
+            && str_contains($prompt->prompt, 'matching_score');
+    });
 });
