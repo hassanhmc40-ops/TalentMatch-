@@ -1,0 +1,8 @@
+- [x] Create the submission form view `resources/views/offres/submit-candidate.blade.php`
+- [x] Add `createCandidate()` method to `JobOfferController` for GET route
+- [x] Add GET route `/offres/{offre}/candidats/soumettre` in `routes/web.php`
+- [x] Add "Soumettre un candidat" link to `resources/views/offres/show.blade.php`
+- [x] Verify authorization gating in `submitCandidate()` and `createCandidate()` via `Gate::authorize('view', $offre)`
+- [x] Write/update feature tests for the end-to-end submission flow (form renders, validation errors inline, redirect with flash message, duplicate redirect, unauthorized user gets 403)
+- [x] Run `vendor/bin/pint --format agent` to ensure code style
+- [x] Run tests to confirm all pass: `php artisan test --compact --filter=CandidateSubmission`

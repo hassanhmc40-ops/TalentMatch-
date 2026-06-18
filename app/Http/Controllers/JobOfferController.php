@@ -51,6 +51,13 @@ class JobOfferController extends Controller
             ->with('success', "L'offre d'emploi a été créée avec succès.");
     }
 
+    public function createCandidate(JobOffer $offre)
+    {
+        Gate::authorize('view', $offre);
+
+        return view('offres.submit-candidate', compact('offre'));
+    }
+
     public function submitCandidate(SubmitCandidateRequest $request, JobOffer $offre)
     {
         Gate::authorize('view', $offre);

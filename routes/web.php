@@ -21,6 +21,10 @@ Route::middleware('auth')->group(function () {
         ->only(['index', 'create', 'store', 'show'])
         ->middleware('verified');
 
+    Route::get('offres/{offre}/candidats/soumettre', [JobOfferController::class, 'createCandidate'])
+        ->name('offres.candidats.create')
+        ->middleware('verified');
+
     Route::post('offres/{offre}/candidats', [JobOfferController::class, 'submitCandidate'])
         ->name('offres.candidats.submit')
         ->middleware('verified');
