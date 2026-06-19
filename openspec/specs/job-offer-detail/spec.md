@@ -27,14 +27,21 @@ The system SHALL display the full criteria of a job offer when the authenticated
 
 ### Requirement: HR user can see analyzed candidates with scores and recommendations
 
-The system SHALL display a list of analyzed candidates for the job offer, showing their name, matching score, and typed recommendation. Each candidate row SHALL include a checkbox for selecting candidates to compare, and a "Comparer" button SHALL appear when at least two candidates are selected.
+The system SHALL display a ranked list of analyzed candidates for the job offer, ordered by matching score descending, showing each candidate's rank, name, matching score (with progress bar), and typed recommendation. Each candidate row SHALL include a checkbox for selecting candidates to compare, and a "Comparer" button SHALL appear when at least two candidates are selected.
 
-#### Scenario: Analyzed candidates are listed
+#### Scenario: Analyzed candidates are listed in ranked order
 - **WHEN** an authenticated owner views the offer detail page
 - **AND** the offer has analyzed candidates
-- **THEN** the system SHALL display each candidate's name, matching score (0-100), and recommendation
+- **THEN** the candidates SHALL be displayed in descending order of `matching_score`
+- **AND** each row SHALL show the candidate's rank number, name (linked to analysis detail page), matching score (0-100) with a progress bar, and recommendation
 - **AND** the recommendations SHALL be displayed in French: "À convoquer", "En attente", "À rejeter"
 - **AND** the candidate names SHALL be links to their analysis detail page (US7)
+
+#### Scenario: Tie-breaking maintains deterministic order
+- **WHEN** two candidates have the same `matching_score`
+- **THEN** the candidate with more `years_experience` SHALL appear first
+- **AND** if still tied, the candidate with more `extracted_skills` SHALL appear first
+- **AND** if still tied, the candidate with the higher education level weight SHALL appear first
 
 #### Scenario: Candidate with no analyses shows empty table
 - **WHEN** an authenticated owner views an offer with no candidate analyses

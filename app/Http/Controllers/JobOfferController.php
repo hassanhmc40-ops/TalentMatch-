@@ -76,6 +76,8 @@ class JobOfferController extends Controller
 
         $offre->load('candidateAnalyses.candidate');
 
+        $offre->candidateAnalyses = CandidateAnalysis::applyTieBreakers($offre->candidateAnalyses);
+
         return view('offres.show', compact('offre'));
     }
 

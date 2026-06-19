@@ -4,10 +4,12 @@ namespace App\Models;
 
 use App\Enums\Recommendation;
 use Database\Factories\CandidateAnalysisFactory;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Collection;
 
 /**
  * @property array $extracted_skills
@@ -84,6 +86,62 @@ class CandidateAnalysis extends Model
     public function missingSkillCount(): int
     {
         return count($this->missing_skills ?? []);
+    }
+
+    public function scopeRanked(Builder $query): Builder
+    {
+        return $query->orderByDesc('matching_score');
+    }
+
+    public static function applyTieBreakers(Collection $analyses): Collection
+    {
+        return $analyses->sort(function (self $a, self $b) {
+            if ($a->matching_score !== $b->matching_score) {
+                return $b->matching_score <=> $a->matching_score;
+            }
+
+            if ($a->years_experience !== $b->years_experience) {
+                return $b->years_experience <=> $a->years_experience;
+            }
+
+            $skillsA = count($a->extracted_skills ?? []);
+            $skillsB = count($b->extracted_skills ?? []);
+
+            if ($skillsA !== $skillsB) {
+                return $skillsB <=> $skillsA;
+            }
+
+            return static::educationWeight($b->education_level ?? '') <=> static::educationWeight($a->education_level ?? '');
+        })->values();
+    }
+
+    public static function educationWeight(?string $level): int
+    {
+        $level = strtolower(trim($level ?? ''));
+
+        $map = [
+            'doctorat' => 100,
+            'bac+5' => 80,
+            'bac+3' => 60,
+            'bac+2' => 40,
+            'bac' => 20,
+            'bts' => 40,
+            'dut' => 40,
+            'licence' => 60,
+            'master' => 80,
+            'master 2' => 80,
+            'master 1' => 60,
+            'ingénieur' => 80,
+            'phd' => 100,
+        ];
+
+        foreach ($map as $key => $score) {
+            if (str_contains($level, $key)) {
+                return $score;
+            }
+        }
+
+        return 0;
     }
 
     public function jobOffer(): BelongsTo

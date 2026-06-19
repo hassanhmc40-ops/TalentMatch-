@@ -85,8 +85,8 @@
             <x-card x-data="{ selected: [] }">
                 <div class="flex items-center justify-between mb-4">
                     <div>
-                        <h3 class="text-h4">Candidats analysés</h3>
-                        <p class="text-sm text-neutral-500 mt-0.5">Liste des candidats soumis à cette offre</p>
+                        <h3 class="text-h4">Classement des candidats</h3>
+                        <p class="text-sm text-neutral-500 mt-0.5">Candidats classés par score décroissant</p>
                     </div>
                     <div class="flex items-center gap-3">
                         <template x-if="selected.length === 2">
@@ -107,7 +107,10 @@
                     <p class="text-neutral-500 text-sm py-4 text-center">Aucun candidat analysé pour cette offre.</p>
                 @else
                     @php
+                        $scoreColor = fn($score) => $score >= 70 ? 'bg-success-500' : ($score >= 40 ? 'bg-warning-500' : 'bg-danger-500');
+
                         $headers = [
+                            ['key' => 'rank', 'label' => '#'],
                             ['key' => 'select', 'label' => ''],
                             ['key' => 'candidate', 'label' => 'Candidat'],
                             ['key' => 'score', 'label' => 'Score'],
@@ -115,15 +118,16 @@
                             ['key' => 'actions', 'label' => ''],
                         ];
 
-                        $rows = $offre->candidateAnalyses->map(fn($a) => [
+                        $rows = $offre->candidateAnalyses->map(fn($a, $i) => [
+                            'rank' => $i + 1,
                             'select' => '<input type="checkbox" x-model="selected" value="' . $a->candidate_id . '" class="rounded border-neutral-300 text-primary-600 focus:ring-primary-500" :class="{ \'ring-2 ring-primary-200\': selected.includes(\'' . $a->candidate_id . '\') }">',
                             'candidate' => $a->candidate->name,
-                            'score' => $a->matching_score . '%',
+                            'score' => '<div class="flex items-center gap-2 justify-end"><span class="text-sm font-medium text-neutral-700">' . $a->matching_score . '%</span><div class="w-20 h-2 bg-neutral-200 rounded-full overflow-hidden"><div class="h-full rounded-full ' . $scoreColor($a->matching_score) . '" style="width: ' . $a->matching_score . '%"></div></div></div>',
                             'recommendation' => $a->recommendation?->label() ?? 'Non défini',
                             'actions' => '<div class="flex items-center gap-3"><a href="' . route('analyses.show', [$offre, $a]) . '" class="text-primary-600 hover:text-primary-700 text-sm font-medium">Voir l\'analyse</a><span class="text-neutral-300">|</span><a href="' . route('conversations.show', [$offre, $a->candidate]) . '" class="text-primary-600 hover:text-primary-700 text-sm font-medium">Assistant →</a></div>',
                         ]);
                     @endphp
-                    <x-table :headers="$headers" :rows="$rows" :rawKeys="['select']" />
+                    <x-table :headers="$headers" :rows="$rows" :rawKeys="['select', 'score']" />
                 @endif
             </x-card>
         </div>
