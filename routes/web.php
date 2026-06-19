@@ -31,6 +31,10 @@ Route::middleware('auth')->group(function () {
         ->name('offres.candidats.submit')
         ->middleware('verified');
 
+    Route::get('offres/{offre}/analyses/{analyse}', [JobOfferController::class, 'showAnalysis'])
+        ->name('analyses.show')
+        ->middleware('verified');
+
     Route::get('conversations/{offre}/{candidat}', [ConversationController::class, 'show'])
         ->name('conversations.show')
         ->middleware('verified');

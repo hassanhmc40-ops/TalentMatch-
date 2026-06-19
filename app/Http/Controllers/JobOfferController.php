@@ -13,6 +13,22 @@ use Illuminate\Support\Str;
 
 class JobOfferController extends Controller
 {
+    public function showAnalysis(JobOffer $offre, CandidateAnalysis $analyse)
+    {
+        Gate::authorize('view', $offre);
+
+        if ($analyse->job_offer_id !== $offre->id) {
+            abort(404);
+        }
+
+        $analyse->load('candidate', 'jobOffer');
+
+        return view('candidate-analyses.show', [
+            'analyse' => $analyse,
+            'offre' => $offre,
+        ]);
+    }
+
     public function index()
     {
         $offers = JobOffer::query()
