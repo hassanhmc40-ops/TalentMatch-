@@ -16,6 +16,7 @@
             :value="$totalOffers"
             label="Offres d'emploi"
             color="primary"
+            :trend="$trends['totalOffers']"
         />
 
         <x-kpi-card
@@ -23,6 +24,7 @@
             :value="$analyzedCandidates"
             label="Candidats analysés"
             color="success"
+            :trend="$trends['analyzedCandidates']"
         />
 
         <x-kpi-card
@@ -30,6 +32,7 @@
             :value="$avgScore"
             label="Score moyen"
             color="warning"
+            :trend="$trends['avgScore']"
         />
 
         <x-kpi-card
@@ -37,20 +40,170 @@
             :value="$pendingAnalyses"
             label="Analyses en attente"
             color="danger"
+            :trend="$trends['pendingAnalyses']"
         />
     </div>
 
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <a href="{{ route('offres.index') }}"
-           class="bg-white rounded-lg shadow-card border border-neutral-200 p-6 text-neutral-900 hover:bg-neutral-50 transition block">
-            <h3 class="text-h4">Mes offres d'emploi</h3>
-            <p class="mt-1 text-sm text-neutral-500">Consultez et gérez vos offres d'emploi</p>
-        </a>
+    @php
+        $maxBand = max($scoreBands) ?: 1;
+    @endphp
 
-        <a href="{{ route('offres.create') }}"
-           class="bg-white rounded-lg shadow-card border border-neutral-200 p-6 text-neutral-900 hover:bg-neutral-50 transition block">
-            <h3 class="text-h4">Créer une offre</h3>
-            <p class="mt-1 text-sm text-neutral-500">Publiez une nouvelle offre d'emploi</p>
-        </a>
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        <x-card>
+            <h3 class="text-h4 mb-1">Distribution des scores</h3>
+            <p class="text-sm text-neutral-500 mb-6">Répartition des scores de correspondance</p>
+
+            @if (array_sum($scoreBands) === 0)
+                <p class="text-neutral-400 text-sm py-8 text-center">Aucune analyse disponible</p>
+            @else
+                <div class="flex items-end justify-between gap-4 h-48">
+                    @foreach ($scoreBands as $i => $count)
+                        @php
+                            $height = $count > 0 ? max(8, ($count / $maxBand) * 100) : 8;
+                            $colorClass = match ($scoreColors[$i]) {
+                                'danger' => 'bg-danger-500',
+                                'warning' => 'bg-warning-500',
+                                'primary' => 'bg-primary-500',
+                                'success' => 'bg-success-500',
+                                default => 'bg-neutral-300',
+                            };
+                        @endphp
+                        <div class="flex-1 flex flex-col items-center">
+                            <span class="text-sm font-semibold text-neutral-700 mb-1">{{ $count }}</span>
+                            <div class="w-full flex justify-center">
+                                <div class="w-10 rounded-t-md {{ $colorClass }} transition-all duration-500" style="height: {{ $height }}%"></div>
+                            </div>
+                            <span class="text-xs text-neutral-500 mt-2">{{ $scoreLabels[$i] }}</span>
+                        </div>
+                    @endforeach
+                </div>
+            @endif
+        </x-card>
+
+        <x-card>
+            <h3 class="text-h4 mb-1">Statut des analyses</h3>
+            <p class="text-sm text-neutral-500 mb-6">Vue d'ensemble par statut</p>
+
+            <dl class="space-y-4">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-2">
+                        <span class="w-3 h-3 rounded-full bg-success-500"></span>
+                        <span class="text-sm text-neutral-700">Terminées</span>
+                    </div>
+                    <span class="font-semibold text-neutral-900">{{ $scoreBands[0] + $scoreBands[1] + $scoreBands[2] + $scoreBands[3] }}</span>
+                </div>
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-2">
+                        <span class="w-3 h-3 rounded-full bg-warning-500"></span>
+                        <span class="text-sm text-neutral-700">En attente</span>
+                    </div>
+                    <span class="font-semibold text-neutral-900">{{ $pendingAnalyses }}</span>
+                </div>
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-2">
+                        <span class="w-3 h-3 rounded-full bg-danger-500"></span>
+                        <span class="text-sm text-neutral-700">Échouées</span>
+                    </div>
+                    <span class="font-semibold text-neutral-900">{{ $failedAnalyses }}</span>
+                </div>
+            </dl>
+        </x-card>
     </div>
+
+    <x-card>
+        <div x-data="{ tab: 'all' }">
+            <div class="flex items-center justify-between mb-4">
+                <div>
+                    <h3 class="text-h4">Analyses récentes</h3>
+                    <p class="text-sm text-neutral-500 mt-0.5">Les 10 dernières analyses</p>
+                </div>
+                <div class="flex gap-1 bg-neutral-100 rounded-lg p-0.5">
+                    <button @click="tab = 'all'" :class="{ 'bg-white shadow-sm': tab === 'all' }" class="px-3 py-1.5 text-sm font-medium rounded-md transition-colors text-neutral-600 hover:text-neutral-900">Tous</button>
+                    <button @click="tab = 'completed'" :class="{ 'bg-white shadow-sm': tab === 'completed' }" class="px-3 py-1.5 text-sm font-medium rounded-md transition-colors text-neutral-600 hover:text-neutral-900">Terminés</button>
+                    <button @click="tab = 'pending'" :class="{ 'bg-white shadow-sm': tab === 'pending' }" class="px-3 py-1.5 text-sm font-medium rounded-md transition-colors text-neutral-600 hover:text-neutral-900">En attente</button>
+                    <button @click="tab = 'failed'" :class="{ 'bg-white shadow-sm': tab === 'failed' }" class="px-3 py-1.5 text-sm font-medium rounded-md transition-colors text-neutral-600 hover:text-neutral-900">Échoués</button>
+                </div>
+            </div>
+
+            @foreach (['all', 'completed', 'pending', 'failed'] as $status)
+                @php
+                    $items = $analysesByStatus[$status] ?? collect();
+                    $statusLabels = ['all' => 'Tous', 'completed' => 'Terminés', 'pending' => 'En attente', 'failed' => 'Échoués'];
+                    $statusColors = ['all' => 'neutral', 'completed' => 'success', 'pending' => 'warning', 'failed' => 'danger'];
+                @endphp
+                <div x-show="tab === '{{ $status }}'" x-cloak>
+                    @if ($items->isEmpty())
+                        <p class="text-neutral-400 text-sm py-8 text-center">Aucune analyse trouvée</p>
+                    @else
+                        <div class="overflow-x-auto rounded-lg border border-neutral-200">
+                            <table class="min-w-full divide-y divide-neutral-200">
+                                <thead class="bg-neutral-50">
+                                    <tr>
+                                        <th class="px-4 py-3 text-left text-xs font-semibold text-neutral-500 uppercase tracking-wider">Candidat</th>
+                                        <th class="px-4 py-3 text-left text-xs font-semibold text-neutral-500 uppercase tracking-wider">Offre</th>
+                                        <th class="px-4 py-3 text-left text-xs font-semibold text-neutral-500 uppercase tracking-wider">Score</th>
+                                        <th class="px-4 py-3 text-left text-xs font-semibold text-neutral-500 uppercase tracking-wider">Recommandation</th>
+                                        <th class="px-4 py-3 text-left text-xs font-semibold text-neutral-500 uppercase tracking-wider">Statut</th>
+                                        <th class="px-4 py-3 text-left text-xs font-semibold text-neutral-500 uppercase tracking-wider">Date</th>
+                                        <th class="px-4 py-3"></th>
+                                    </tr>
+                                </thead>
+                                <tbody class="bg-white divide-y divide-neutral-200">
+                                    @foreach ($items as $analysis)
+                                        <tr class="hover:bg-neutral-50 transition-colors duration-150">
+                                            <td class="px-4 py-3 whitespace-nowrap text-sm font-medium text-neutral-900">{{ $analysis->candidate->name }}</td>
+                                            <td class="px-4 py-3 whitespace-nowrap text-sm text-neutral-600">{{ $analysis->jobOffer->title }}</td>
+                                            <td class="px-4 py-3 whitespace-nowrap text-sm">
+                                                @php
+                                                    $scoreVariant = match (true) {
+                                                        $analysis->matching_score >= 81 => 'success',
+                                                        $analysis->matching_score >= 61 => 'primary',
+                                                        $analysis->matching_score >= 31 => 'warning',
+                                                        default => 'danger',
+                                                    };
+                                                @endphp
+                                                <x-badge :variant="$scoreVariant">{{ $analysis->matching_score }}%</x-badge>
+                                            </td>
+                                            <td class="px-4 py-3 whitespace-nowrap text-sm">
+                                                @php
+                                                    $recVariant = match ($analysis->recommendation?->value) {
+                                                        'convoquer' => 'success',
+                                                        'attente' => 'warning',
+                                                        'rejeter' => 'danger',
+                                                        default => 'neutral',
+                                                    };
+                                                @endphp
+                                                <x-badge :variant="$recVariant">{{ $analysis->recommendation?->label() ?? 'Non définie' }}</x-badge>
+                                            </td>
+                                            <td class="px-4 py-3 whitespace-nowrap text-sm">
+                                                @php
+                                                    $statusVariant = match ($analysis->status) {
+                                                        'completed' => 'success',
+                                                        'pending' => 'warning',
+                                                        'failed' => 'danger',
+                                                        default => 'neutral',
+                                                    };
+                                                    $statusLabel = match ($analysis->status) {
+                                                        'completed' => 'Terminée',
+                                                        'pending' => 'En attente',
+                                                        'failed' => 'Échouée',
+                                                        default => $analysis->status,
+                                                    };
+                                                @endphp
+                                                <x-badge :variant="$statusVariant">{{ $statusLabel }}</x-badge>
+                                            </td>
+                                            <td class="px-4 py-3 whitespace-nowrap text-sm text-neutral-500">{{ $analysis->created_at->format('d/m/Y') }}</td>
+                                            <td class="px-4 py-3 whitespace-nowrap text-sm text-right">
+                                                <a href="{{ route('analyses.show', [$analysis->jobOffer, $analysis]) }}" class="text-primary-600 hover:text-primary-700 font-medium">Voir</a>
+                                            </td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                    @endif
+                </div>
+            @endforeach
+        </div>
+    </x-card>
 </x-app-layout>

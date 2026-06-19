@@ -112,3 +112,64 @@ it('scopes kpi data to authenticated user only', function () {
         ->assertOk()
         ->assertSee('0');        // totalOffers = 0 for this user
 });
+
+it('shows score distribution chart with data', function () {
+    JobOffer::factory()
+        ->count(1)
+        ->for($this->user)
+        ->create()
+        ->each(function ($offer) {
+            CandidateAnalysis::factory()
+                ->count(4)
+                ->sequence(
+                    ['status' => 'completed', 'matching_score' => 25],
+                    ['status' => 'completed', 'matching_score' => 50],
+                    ['status' => 'completed', 'matching_score' => 70],
+                    ['status' => 'completed', 'matching_score' => 90],
+                )
+                ->create(['job_offer_id' => $offer->id]);
+        });
+
+    Cache::flush();
+
+    $this->get(route('dashboard'))
+        ->assertOk()
+        ->assertSee('Distribution des scores')
+        ->assertSee('0-30')
+        ->assertSee('31-60')
+        ->assertSee('61-80')
+        ->assertSee('81-100');
+});
+
+it('shows recent analyses table', function () {
+    $offer = JobOffer::factory()->for($this->user)->create();
+    $analysis = CandidateAnalysis::factory()->create([
+        'job_offer_id' => $offer->id,
+        'status' => 'completed',
+        'matching_score' => 85,
+    ]);
+
+    Cache::flush();
+
+    $this->get(route('dashboard'))
+        ->assertOk()
+        ->assertSee('Analyses récentes')
+        ->assertSee($analysis->candidate->name)
+        ->assertSee($offer->title)
+        ->assertSee('85%');
+});
+
+it('shows neutral KPI trends on first load', function () {
+    Cache::flush();
+
+    $this->get(route('dashboard'))
+        ->assertOk();
+});
+
+it('shows empty state when user has no data', function () {
+    Cache::flush();
+
+    $this->get(route('dashboard'))
+        ->assertOk()
+        ->assertSee('Aucune analyse');
+});
