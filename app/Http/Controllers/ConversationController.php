@@ -11,6 +11,8 @@ use App\Models\JobOffer;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Laravel\Ai\Streaming\Events\TextDelta;
+use Laravel\Ai\Streaming\Events\ToolCall;
+use Laravel\Ai\Streaming\Events\ToolResult;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class ConversationController extends Controller
@@ -108,6 +110,29 @@ class ConversationController extends Controller
                 if ($event instanceof TextDelta) {
                     $token = json_encode(['token' => $event->delta]);
                     echo "data: {$token}\n\n";
+                    ob_flush();
+                    flush();
+                }
+
+                if ($event instanceof ToolCall) {
+                    $data = json_encode([
+                        'type' => 'tool_call',
+                        'tool_name' => $event->toolCall->name,
+                        'arguments' => $event->toolCall->arguments,
+                    ]);
+                    echo "data: {$data}\n\n";
+                    ob_flush();
+                    flush();
+                }
+
+                if ($event instanceof ToolResult) {
+                    $data = json_encode([
+                        'type' => 'tool_result',
+                        'tool_name' => $event->toolResult->name,
+                        'successful' => $event->successful,
+                        'error' => $event->error,
+                    ]);
+                    echo "data: {$data}\n\n";
                     ob_flush();
                     flush();
                 }

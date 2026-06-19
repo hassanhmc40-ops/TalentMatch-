@@ -2,17 +2,19 @@
 
 namespace App\Ai\Agents;
 
+use App\Ai\Middleware\LogToolCalls;
 use App\Ai\Tools\CompareCandidates;
 use App\Ai\Tools\GetCandidateAnalysis;
 use App\Ai\Tools\GetJobRequirements;
 use Laravel\Ai\Concerns\RemembersConversations;
 use Laravel\Ai\Contracts\Agent;
 use Laravel\Ai\Contracts\Conversational;
+use Laravel\Ai\Contracts\HasMiddleware;
 use Laravel\Ai\Contracts\HasTools;
 use Laravel\Ai\Promptable;
 use Stringable;
 
-class ConversationalAgent implements Agent, Conversational, HasTools
+class ConversationalAgent implements Agent, Conversational, HasMiddleware, HasTools
 {
     use Promptable, RemembersConversations;
 
@@ -23,6 +25,13 @@ class ConversationalAgent implements Agent, Conversational, HasTools
         $this->context = $context;
 
         return $this;
+    }
+
+    public function middleware(): array
+    {
+        return [
+            new LogToolCalls,
+        ];
     }
 
     public function instructions(): Stringable|string

@@ -87,7 +87,41 @@
                                                 </div>
                                             </template>
                                         </div>
-                                        <div>
+                                         <div>
+                                            <template x-if="msg.role === 'assistant' && msg.toolCalls && msg.toolCalls.length > 0">
+                                                <div class="mb-2 space-y-1">
+                                                    <template x-for="(tool, ti) in msg.toolCalls" :key="ti">
+                                                        <div class="flex items-center gap-2 bg-neutral-50 border border-neutral-200 rounded-lg px-3 py-1.5 text-xs max-w-[80%]">
+                                                            <template x-if="tool.status === 'running'">
+                                                                <svg class="w-3.5 h-3.5 text-primary-500 animate-spin" fill="none" viewBox="0 0 24 24">
+                                                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+                                                                </svg>
+                                                            </template>
+                                                            <template x-if="tool.status === 'done'">
+                                                                <svg class="w-3.5 h-3.5 text-success-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                                                </svg>
+                                                            </template>
+                                                            <template x-if="tool.status === 'error'">
+                                                                <svg class="w-3.5 h-3.5 text-danger-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                                                </svg>
+                                                            </template>
+                                                            <span x-text="tool.name"></span>
+                                                            <template x-if="tool.status === 'running'">
+                                                                <span class="text-primary-600">En cours...</span>
+                                                            </template>
+                                                            <template x-if="tool.status === 'done'">
+                                                                <span class="text-success-600">Terminé</span>
+                                                            </template>
+                                                            <template x-if="tool.status === 'error'">
+                                                                <span class="text-danger-600" x-text="'Erreur: ' + (tool.error || 'inconnue')"></span>
+                                                            </template>
+                                                        </div>
+                                                    </template>
+                                                </div>
+                                            </template>
                                             <div
                                                 :class="msg.role === 'user'
                                                     ? 'bg-primary-600 text-white rounded-2xl rounded-br-sm'
@@ -273,6 +307,7 @@
                         id: assistantId,
                         role: 'assistant',
                         content: '',
+                        toolCalls: [],
                         created_at: new Date().toISOString(),
                     };
                     this.messages.push(assistantMsg);
@@ -295,6 +330,27 @@
                                 const lastMsg = this.messages[this.messages.length - 1];
                                 if (lastMsg && lastMsg.id === assistantId) {
                                     lastMsg.content += data.token;
+                                    this.$nextTick(() => this.scrollToBottom());
+                                }
+                            }
+                            if (data.type === 'tool_call') {
+                                const lastMsg = this.messages[this.messages.length - 1];
+                                if (lastMsg && lastMsg.id === assistantId) {
+                                    lastMsg.toolCalls.push({
+                                        name: data.tool_name,
+                                        status: 'running',
+                                    });
+                                    this.$nextTick(() => this.scrollToBottom());
+                                }
+                            }
+                            if (data.type === 'tool_result') {
+                                const lastMsg = this.messages[this.messages.length - 1];
+                                if (lastMsg && lastMsg.id === assistantId) {
+                                    const tool = lastMsg.toolCalls.find(t => t.name === data.tool_name);
+                                    if (tool) {
+                                        tool.status = data.successful ? 'done' : 'error';
+                                        tool.error = data.error;
+                                    }
                                     this.$nextTick(() => this.scrollToBottom());
                                 }
                             }
