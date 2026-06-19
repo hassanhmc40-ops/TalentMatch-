@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class AgentConversation extends Model
 {
@@ -39,8 +40,37 @@ class AgentConversation extends Model
         return $this->hasMany(AgentConversationMessage::class, 'conversation_id', 'id')->orderBy('created_at');
     }
 
+    public function latestMessage(): HasOne
+    {
+        return $this->hasOne(AgentConversationMessage::class, 'conversation_id', 'id')->latestOfMany('created_at');
+    }
+
     public function scopeByUser($query, int $userId)
     {
         return $query->where('user_id', $userId);
+    }
+
+    public function scopeWithCandidateAnalysis($query)
+    {
+        return $query->whereNotNull('candidate_analysis_id')
+            ->with([
+                'candidateAnalysis.candidate',
+                'candidateAnalysis.jobOffer',
+                'latestMessage',
+            ]);
+    }
+
+    public function scopeForDashboard($query, int $userId)
+    {
+        return $query->byUser($userId)
+            ->whereNotNull('candidate_analysis_id')
+            ->with([
+                'candidateAnalysis.candidate',
+                'candidateAnalysis.jobOffer',
+                'latestMessage',
+            ])
+            ->withCount('messages')
+            ->orderByDesc('updated_at')
+            ->take(10);
     }
 }

@@ -2,9 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\AgentConversation;
 use App\Models\CandidateAnalysis;
 use App\Models\JobOffer;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Str;
 
 class DashboardController extends Controller
 {
@@ -92,6 +94,22 @@ class DashboardController extends Controller
             'failed' => (clone $analysesQuery)->where('status', 'failed')->orderByDesc('created_at')->take(10)->get(),
         ];
 
+        $recentConversations = AgentConversation::query()
+            ->forDashboard($userId)
+            ->get()
+            ->map(fn ($conv) => [
+                'id' => $conv->id,
+                'title' => $conv->title,
+                'candidate_name' => $conv->candidateAnalysis?->candidate?->name ?? 'Inconnu',
+                'offer_title' => $conv->candidateAnalysis?->jobOffer?->title ?? 'Inconnue',
+                'message_count' => $conv->messages_count,
+                'last_message' => $conv->latestMessage?->content ? Str::limit(strip_tags($conv->latestMessage->content), 80) : '',
+                'last_activity' => $conv->updated_at->diffForHumans(),
+                'updated_at' => $conv->updated_at->toIso8601String(),
+                'url' => $conv->candidateAnalysis ? route('conversations.show', [$conv->candidateAnalysis->jobOffer, $conv->candidateAnalysis->candidate]) : '#',
+            ])
+            ->values();
+
         return view('dashboard', [
             ...$kpi,
             'trends' => $trends,
@@ -100,6 +118,7 @@ class DashboardController extends Controller
             'scoreColors' => ['danger', 'warning', 'primary', 'success'],
             'analysesByStatus' => $analysesByStatus,
             'failedAnalyses' => $failedAnalyses,
+            'recentConversations' => $recentConversations,
         ]);
     }
 

@@ -198,4 +198,96 @@
             @endforeach
         </div>
     </x-card>
+
+    <x-card class="mt-6">
+        <div x-data="conversationsState()">
+            <div class="flex items-center justify-between mb-4">
+                <div>
+                    <h3 class="text-h4">Conversations récentes</h3>
+                    <p class="text-sm text-neutral-500 mt-0.5">Les 10 dernières conversations</p>
+                </div>
+            </div>
+
+            <div class="flex flex-wrap gap-3 mb-4">
+                <div class="flex-1 min-w-[200px]">
+                    <input type="text" x-model="search" placeholder="Rechercher par candidat ou offre..." class="w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm focus:border-primary-500 focus:ring-1 focus:ring-primary-500">
+                </div>
+                <div>
+                    <input type="date" x-model="dateFrom" placeholder="Du" class="rounded-lg border border-neutral-300 px-3 py-2 text-sm focus:border-primary-500 focus:ring-1 focus:ring-primary-500">
+                </div>
+                <div>
+                    <input type="date" x-model="dateTo" placeholder="Au" class="rounded-lg border border-neutral-300 px-3 py-2 text-sm focus:border-primary-500 focus:ring-1 focus:ring-primary-500">
+                </div>
+            </div>
+
+            <template x-if="filteredConversations.length === 0">
+                <p class="text-neutral-400 text-sm py-8 text-center">Aucune conversation trouvée</p>
+            </template>
+
+            <template x-if="filteredConversations.length > 0">
+                <div class="overflow-x-auto rounded-lg border border-neutral-200">
+                    <table class="min-w-full divide-y divide-neutral-200">
+                        <thead class="bg-neutral-50">
+                            <tr>
+                                <th class="px-4 py-3 text-left text-xs font-semibold text-neutral-500 uppercase tracking-wider">Candidat</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold text-neutral-500 uppercase tracking-wider">Offre</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold text-neutral-500 uppercase tracking-wider">Titre</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold text-neutral-500 uppercase tracking-wider">Messages</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold text-neutral-500 uppercase tracking-wider">Dernier message</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold text-neutral-500 uppercase tracking-wider">Activité</th>
+                                <th class="px-4 py-3"></th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-neutral-200">
+                            <template x-for="conv in filteredConversations" :key="conv.id">
+                                <tr class="hover:bg-neutral-50 transition-colors duration-150 cursor-pointer" @click="window.location.href = conv.url">
+                                    <td class="px-4 py-3 whitespace-nowrap text-sm font-medium text-neutral-900" x-text="conv.candidate_name"></td>
+                                    <td class="px-4 py-3 whitespace-nowrap text-sm text-neutral-600" x-text="conv.offer_title"></td>
+                                    <td class="px-4 py-3 whitespace-nowrap text-sm text-neutral-600" x-text="conv.title || 'Sans titre'"></td>
+                                    <td class="px-4 py-3 whitespace-nowrap text-sm">
+                                        <span class="inline-flex items-center justify-center min-w-[1.5rem] h-5 px-1.5 rounded-full bg-primary-100 text-primary-700 text-xs font-medium" x-text="conv.message_count"></span>
+                                    </td>
+                                    <td class="px-4 py-3 whitespace-nowrap text-sm text-neutral-500 max-w-[200px] truncate" x-text="conv.last_message"></td>
+                                    <td class="px-4 py-3 whitespace-nowrap text-sm text-neutral-500" x-text="conv.last_activity"></td>
+                                    <td class="px-4 py-3 whitespace-nowrap text-sm text-right">
+                                        <a :href="conv.url" class="text-primary-600 hover:text-primary-700 font-medium">Ouvrir</a>
+                                    </td>
+                                </tr>
+                            </template>
+                        </tbody>
+                    </table>
+                </div>
+            </template>
+        </div>
+    </x-card>
 </x-app-layout>
+
+@push('scripts')
+<script>
+function conversationsState() {
+    return {
+        search: '',
+        dateFrom: '',
+        dateTo: '',
+        conversations: @json($recentConversations),
+        get filteredConversations() {
+            let items = this.conversations;
+            if (this.search) {
+                const q = this.search.toLowerCase();
+                items = items.filter(c => c.candidate_name.toLowerCase().includes(q) || c.offer_title.toLowerCase().includes(q));
+            }
+            if (this.dateFrom) {
+                const from = new Date(this.dateFrom);
+                items = items.filter(c => new Date(c.updated_at) >= from);
+            }
+            if (this.dateTo) {
+                const to = new Date(this.dateTo);
+                to.setHours(23, 59, 59, 999);
+                items = items.filter(c => new Date(c.updated_at) <= to);
+            }
+            return items;
+        }
+    };
+}
+</script>
+@endpush
