@@ -66,13 +66,6 @@
                         $score >= 31 => 'warning',
                         default => 'danger',
                     };
-
-                    $recommendationVariant = match ($analyse->recommendation?->value) {
-                        'convoquer' => 'success',
-                        'attente' => 'warning',
-                        'rejeter' => 'danger',
-                        default => 'neutral',
-                    };
                 @endphp
 
                 <x-card>
@@ -179,15 +172,10 @@
                     @endif
                 </x-card>
 
-                <x-card>
-                    <div class="flex items-center justify-between mb-4">
-                        <h3 class="text-h4">Recommandation</h3>
-                        <x-badge :variant="$recommendationVariant" class="text-sm px-3 py-1">
-                            {{ $analyse->recommendation?->label() ?? 'Non définie' }}
-                        </x-badge>
-                    </div>
-                    <p class="text-neutral-700 leading-relaxed">{{ $analyse->justification }}</p>
-                </x-card>
+                <x-recommendation-callout
+                    :recommendation="$analyse->recommendation"
+                    :justification="$analyse->justification"
+                />
             @endif
         </div>
     </div>

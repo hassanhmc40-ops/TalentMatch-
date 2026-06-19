@@ -49,7 +49,7 @@ The matching score SHALL be displayed as a color-coded progress bar with the sco
 
 ### Requirement: Recommendation display
 
-The recommendation SHALL be displayed as a color-coded badge with the French label.
+The recommendation SHALL be displayed as a color-coded badge with the French label. On the analysis detail page, the recommendation SHALL be shown as a prominent full-width callout card.
 
 #### Scenario: Recommendation badge colors
 - **WHEN** `recommendation` is `Convoquer`
@@ -58,6 +58,11 @@ The recommendation SHALL be displayed as a color-coded badge with the French lab
 - **THEN** the badge SHALL use the `warning` variant with label "En attente"
 - **WHEN** `recommendation` is `Rejeter`
 - **THEN** the badge SHALL use the `danger` variant with label "À rejeter"
+
+#### Scenario: Recommendation callout on detail page
+- **WHEN** the HR user views a completed analysis detail page
+- **THEN** the recommendation SHALL be rendered as a full-width callout card with a left accent border, tinted background, icon, heading, and justification text
+- **AND** the callout SHALL use the `<x-recommendation-callout>` component with the appropriate color encoding per recommendation value
 
 ### Requirement: Navigation from offer detail to analysis
 

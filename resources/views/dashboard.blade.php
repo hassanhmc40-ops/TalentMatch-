@@ -165,15 +165,7 @@
                                                 <x-badge :variant="$scoreVariant">{{ $analysis->matching_score }}%</x-badge>
                                             </td>
                                             <td class="px-4 py-3 whitespace-nowrap text-sm">
-                                                @php
-                                                    $recVariant = match ($analysis->recommendation?->value) {
-                                                        'convoquer' => 'success',
-                                                        'attente' => 'warning',
-                                                        'rejeter' => 'danger',
-                                                        default => 'neutral',
-                                                    };
-                                                @endphp
-                                                <x-badge :variant="$recVariant">{{ $analysis->recommendation?->label() ?? 'Non définie' }}</x-badge>
+                                                <x-recommendation-badge :recommendation="$analysis->recommendation" />
                                             </td>
                                             <td class="px-4 py-3 whitespace-nowrap text-sm">
                                                 @php

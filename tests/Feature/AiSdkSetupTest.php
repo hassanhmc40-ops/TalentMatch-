@@ -3,13 +3,13 @@
 use Illuminate\Support\Facades\Config;
 
 test('ai config is published and loads correctly', function () {
-    expect(Config::get('ai.default'))->toBe('openai');
-    expect(Config::get('ai.providers.openai.driver'))->toBe('openai');
+    expect(Config::get('ai.default'))->toBe('groq');
+    expect(Config::get('ai.providers.groq.driver'))->toBe('groq');
     expect(Config::get('ai.providers.anthropic.driver'))->toBe('anthropic');
 });
 
 test('default models are configured', function () {
-    expect(Config::get('ai.models.text'))->toBe('gpt-4o-mini');
+    expect(Config::get('ai.models.text'))->toBe('meta-llama/llama-4-scout-17b-16e-instruct');
     expect(Config::get('ai.models.embeddings'))->toBe('text-embedding-3-small');
 });
 
