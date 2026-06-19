@@ -8,11 +8,42 @@ use App\Jobs\AnalyseCvJob;
 use App\Models\Candidate;
 use App\Models\CandidateAnalysis;
 use App\Models\JobOffer;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Str;
 
 class JobOfferController extends Controller
 {
+    public function compare(Request $request, JobOffer $offre)
+    {
+        Gate::authorize('view', $offre);
+
+        $candidateIds = $request->query('candidats', []);
+
+        if (! is_array($candidateIds) || count($candidateIds) < 2) {
+            return redirect()->route('offres.show', $offre)
+                ->withErrors(['comparer' => 'Sélectionnez deux candidats à comparer.']);
+        }
+
+        $ids = array_slice(array_map('intval', $candidateIds), 0, 2);
+
+        $analyses = CandidateAnalysis::query()
+            ->whereIn('candidate_id', $ids)
+            ->where('job_offer_id', $offre->id)
+            ->with('candidate')
+            ->get();
+
+        if ($analyses->count() !== 2) {
+            return redirect()->route('offres.show', $offre)
+                ->withErrors(['comparer' => 'Candidat non trouvé pour cette offre.']);
+        }
+
+        $analysisA = $analyses->firstWhere('candidate_id', $ids[0]);
+        $analysisB = $analyses->firstWhere('candidate_id', $ids[1]);
+
+        return view('offres.comparer', compact('offre', 'analysisA', 'analysisB'));
+    }
+
     public function showAnalysis(JobOffer $offre, CandidateAnalysis $analyse)
     {
         Gate::authorize('view', $offre);

@@ -82,15 +82,25 @@
                 </x-card>
             @endif
 
-            <x-card>
+            <x-card x-data="{ selected: [] }">
                 <div class="flex items-center justify-between mb-4">
                     <div>
                         <h3 class="text-h4">Candidats analysés</h3>
                         <p class="text-sm text-neutral-500 mt-0.5">Liste des candidats soumis à cette offre</p>
                     </div>
-                    <a href="{{ route('offres.candidats.create', $offre) }}">
-                        <x-button size="sm">Soumettre un candidat</x-button>
-                    </a>
+                    <div class="flex items-center gap-3">
+                        <template x-if="selected.length === 2">
+                            <a x-bind:href="'{{ route('offres.comparer', $offre) }}?candidats[]=' + selected[0] + '&candidats[]=' + selected[1]">
+                                <x-button size="sm" variant="primary">Comparer les candidats sélectionnés</x-button>
+                            </a>
+                        </template>
+                        <template x-if="selected.length !== 2">
+                            <x-button size="sm" variant="outline" disabled>Sélectionnez exactement 2 candidats</x-button>
+                        </template>
+                        <a href="{{ route('offres.candidats.create', $offre) }}">
+                            <x-button size="sm">Soumettre un candidat</x-button>
+                        </a>
+                    </div>
                 </div>
 
                 @if ($offre->candidateAnalyses->isEmpty())
@@ -98,6 +108,7 @@
                 @else
                     @php
                         $headers = [
+                            ['key' => 'select', 'label' => ''],
                             ['key' => 'candidate', 'label' => 'Candidat'],
                             ['key' => 'score', 'label' => 'Score'],
                             ['key' => 'recommendation', 'label' => 'Recommandation'],
@@ -105,13 +116,14 @@
                         ];
 
                         $rows = $offre->candidateAnalyses->map(fn($a) => [
+                            'select' => '<input type="checkbox" x-model="selected" value="' . $a->candidate_id . '" class="rounded border-neutral-300 text-primary-600 focus:ring-primary-500" :class="{ \'ring-2 ring-primary-200\': selected.includes(\'' . $a->candidate_id . '\') }">',
                             'candidate' => $a->candidate->name,
                             'score' => $a->matching_score . '%',
                             'recommendation' => $a->recommendation?->label() ?? 'Non défini',
                             'actions' => '<div class="flex items-center gap-3"><a href="' . route('analyses.show', [$offre, $a]) . '" class="text-primary-600 hover:text-primary-700 text-sm font-medium">Voir l\'analyse</a><span class="text-neutral-300">|</span><a href="' . route('conversations.show', [$offre, $a->candidate]) . '" class="text-primary-600 hover:text-primary-700 text-sm font-medium">Assistant →</a></div>',
                         ]);
                     @endphp
-                    <x-table :headers="$headers" :rows="$rows" />
+                    <x-table :headers="$headers" :rows="$rows" :rawKeys="['select']" />
                 @endif
             </x-card>
         </div>

@@ -35,6 +35,10 @@ Route::middleware('auth')->group(function () {
         ->name('analyses.show')
         ->middleware('verified');
 
+    Route::get('offres/{offre}/comparer', [JobOfferController::class, 'compare'])
+        ->name('offres.comparer')
+        ->middleware('verified');
+
     Route::get('conversations/{offre}/{candidat}', [ConversationController::class, 'show'])
         ->name('conversations.show')
         ->middleware('verified');

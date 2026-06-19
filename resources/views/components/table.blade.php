@@ -1,6 +1,7 @@
 @props([
     'headers' => [],
     'rows' => [],
+    'rawKeys' => [],
 ])
 
 @php
@@ -33,8 +34,12 @@ $hasActions = ! empty(trim($actions ?? ''));
                         @php
                             $key = $header['key'] ?? $header;
                         @endphp
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-neutral-700">
-                            {{ data_get($row, $key) }}
+                        <td class="px-6 py-4 text-sm text-neutral-700">
+                            @if (in_array($key, $rawKeys))
+                                {!! data_get($row, $key) !!}
+                            @else
+                                {{ data_get($row, $key) }}
+                            @endif
                         </td>
                     @endforeach
                     @if ($hasActions)
