@@ -74,13 +74,14 @@ The conversation view SHALL render a scrollable message list with user messages 
 
 #### Scenario: Messages are displayed in chronological order
 - **WHEN** the user visits the conversation page
-- **THEN** all previous messages SHALL be displayed in chronological order
+- **THEN** all previous messages SHALL be loaded from `agent_conversation_messages` and displayed in chronological order
 - **AND** the most recent message SHALL be visible (auto-scroll)
 
 #### Scenario: Loading state is shown during AI response
-- **WHEN** the user submits a message
-- **THEN** a loading indicator SHALL be displayed while the AI generates a response
+- **WHEN** the user submits a message via AJAX
+- **THEN** a typing indicator with animated dots SHALL be displayed while the AI generates a response
 - **AND** the input SHALL be disabled during loading
+- **AND** the response SHALL stream token by token via SSE
 
 ### Requirement: Conversations are linked to candidate analyses
 

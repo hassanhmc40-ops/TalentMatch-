@@ -42,6 +42,10 @@ Route::middleware('auth')->group(function () {
     Route::post('conversations/{offre}/{candidat}', [ConversationController::class, 'store'])
         ->name('conversations.store')
         ->middleware('verified');
+
+    Route::get('conversations/{offre}/{candidat}/stream', [ConversationController::class, 'stream'])
+        ->name('conversations.stream')
+        ->middleware('verified');
 });
 
 require __DIR__.'/auth.php';
