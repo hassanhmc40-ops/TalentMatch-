@@ -56,7 +56,8 @@ class ConversationController extends Controller
         $conversationId = 'candidate-analysis-'.$analysis->id;
 
         $agent = ConversationalAgent::make()
-            ->continue($conversationId, auth()->user());
+            ->continue($conversationId, auth()->user())
+            ->setContext($this->buildContext($offre, $candidat, $analysis));
 
         $response = $agent->prompt($validated['message']);
 
@@ -92,7 +93,8 @@ class ConversationController extends Controller
         $conversationId = 'candidate-analysis-'.$analysis->id;
 
         $agent = ConversationalAgent::make()
-            ->continue($conversationId, auth()->user());
+            ->continue($conversationId, auth()->user())
+            ->setContext($this->buildContext($offre, $candidat, $analysis));
 
         $response = new StreamedResponse(function () use ($agent, $validated, $conversationId, $analysis) {
             header('X-Accel-Buffering: no');
@@ -125,5 +127,37 @@ class ConversationController extends Controller
         $response->headers->set('X-Accel-Buffering', 'no');
 
         return $response;
+    }
+
+    private function buildContext(JobOffer $offre, Candidate $candidat, CandidateAnalysis $analysis): array
+    {
+        $score = $analysis->matching_score;
+
+        $scoreLevel = match (true) {
+            $score >= 81 => 'Excellent',
+            $score >= 61 => 'Bon',
+            $score >= 31 => 'Moyen',
+            default => 'Faible',
+        };
+
+        $keySkills = [];
+        if ($analysis->extracted_skills) {
+            $skills = json_decode($analysis->extracted_skills, true);
+            if (is_array($skills)) {
+                $keySkills = $skills;
+            }
+        }
+
+        return [
+            'candidate_name' => $candidat->name,
+            'candidat_id' => $candidat->id,
+            'offer_title' => $offre->title,
+            'offre_id' => $offre->id,
+            'analyse_id' => $analysis->id,
+            'matching_score' => $score,
+            'score_level' => $scoreLevel,
+            'recommendation' => $analysis->recommendation,
+            'key_skills' => $keySkills,
+        ];
     }
 }
