@@ -12,6 +12,11 @@ use Laravel\Ai\Contracts\HasTools;
 use Laravel\Ai\Promptable;
 use Stringable;
 
+// Agent lifecycle: make() → continue()/forUser() → prompt()/stream()/queue()
+// Memory pipeline (auto-registered by SDK when RemembersConversations is used
+// and a conversation participant is set):
+//   RemembersConversations trait ─→ RememberConversation middleware
+//     ─→ DatabaseConversationStore (agent_conversations + messages tables)
 class ConversationalAgent implements Agent, Conversational, HasTools
 {
     use Promptable, RemembersConversations;

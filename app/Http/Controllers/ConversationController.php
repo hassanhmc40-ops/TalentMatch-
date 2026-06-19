@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Ai\Agents\ConversationalAgent;
+use App\Models\AgentConversation;
 use App\Models\Candidate;
 use App\Models\CandidateAnalysis;
 use App\Models\JobOffer;
@@ -38,20 +39,27 @@ class ConversationController extends Controller
             ->where('candidate_id', $candidat->id)
             ->firstOrFail();
 
+        // Force a predictable conversation ID tied to this analysis.
+        // The SDK's RememberConversation middleware detects a non-null
+        // currentConversation() and skips auto-creation, using this ID for
+        // all message storage in agent_conversation_messages.
         $conversationId = 'candidate-analysis-'.$analysis->id;
-        $systemContext = sprintf(
-            "Contexte : Le recruteur consulte l'analyse du candidat '%s' pour l'offre '%s'. Score : %d/100. Recommandation : %s.",
-            $candidat->name,
-            $offre->title,
-            $analysis->matching_score,
-            $analysis->recommendation->value,
-        );
 
+        // continue() sets currentConversation() to our ID and registers the
+        // user as the conversation participant — the middleware requires
+        // both to activate the memory pipeline.
         $agent = ConversationalAgent::make()
-            ->conversation($conversationId)
-            ->systemContext($systemContext);
+            ->continue($conversationId, auth()->user());
 
-        $response = $agent->send($validated['message']);
+        // prompt() builds an AgentPrompt with instructions, messages, and
+        // tools, then invokes the provider gateway. The pipeline is:
+        //   RemembersConversations → RememberConversation middleware →
+        //   DatabaseConversationStore (stores user + assistant messages)
+        $response = $agent->prompt($validated['message']);
+
+        AgentConversation::where('id', $conversationId)
+            ->whereNull('candidate_analysis_id')
+            ->update(['candidate_analysis_id' => $analysis->id]);
 
         return redirect()
             ->route('conversations.show', [$offre, $candidat])
