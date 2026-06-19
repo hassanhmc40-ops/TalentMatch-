@@ -12,7 +12,7 @@ class GetJobRequirements implements Tool
 {
     public function description(): Stringable|string
     {
-        return 'Retrieves job offer criteria from the database by offer ID. Use this to get the title, description, required skills, and minimum experience requirements for any job offer.';
+        return 'Récupère les critères d\'une offre d\'emploi depuis la base de données par son ID. Utilisez cet outil pour obtenir le titre, la description, les compétences requises et l\'expérience minimale requise.';
     }
 
     public function handle(Request $request): Stringable|string

@@ -12,7 +12,7 @@ class GetCandidateAnalysis implements Tool
 {
     public function description(): Stringable|string
     {
-        return 'Retrieves the full candidate analysis from the database by candidate ID. Use this to get the complete analysis data including extracted skills, experience, education, languages, matching score, strengths, gaps, missing skills, recommendation, and justification.';
+        return 'Récupère l\'analyse complète d\'un candidat depuis la base de données par son ID. Utilisez cet outil pour obtenir les compétences extraites, l\'expérience, la formation, les langues, le score de correspondance, les forces, les lacunes, les compétences manquantes, la recommandation et la justification.';
     }
 
     public function handle(Request $request): Stringable|string

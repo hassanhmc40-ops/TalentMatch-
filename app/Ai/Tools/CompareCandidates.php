@@ -12,7 +12,7 @@ class CompareCandidates implements Tool
 {
     public function description(): Stringable|string
     {
-        return 'Compares two candidate analyses for the same job offer. Use this to show the differences in matching scores, strengths, gaps, and recommendations between two candidates. Both candidates must be analyzed for the same offer.';
+        return 'Compare deux analyses de candidats pour la même offre d\'emploi. Utilisez cet outil pour afficher les différences de scores, forces, lacunes et recommandations entre deux candidats. Les deux candidats doivent être analysés pour la même offre.';
     }
 
     public function handle(Request $request): Stringable|string
