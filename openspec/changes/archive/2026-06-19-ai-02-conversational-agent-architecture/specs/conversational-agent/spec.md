@@ -1,8 +1,4 @@
-## Purpose
-
-Define the conversational agent architecture for TalentMatch, including the French-language HR assistant with tool calling, conversation memory, authorization-scoped tools, and chat UI.
-
-## Requirements
+## MODIFIED Requirements
 
 ### Requirement: Agent uses French system instructions with tool-usage rules
 

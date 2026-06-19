@@ -39,11 +39,22 @@ class ConversationController extends Controller
             ->where('candidate_id', $candidat->id)
             ->firstOrFail();
 
+        // Force a predictable conversation ID tied to this analysis.
+        // The SDK's RememberConversation middleware detects a non-null
+        // currentConversation() and skips auto-creation, using this ID for
+        // all message storage in agent_conversation_messages.
         $conversationId = 'candidate-analysis-'.$analysis->id;
 
+        // continue() sets currentConversation() to our ID and registers the
+        // user as the conversation participant — the middleware requires
+        // both to activate the memory pipeline.
         $agent = ConversationalAgent::make()
             ->continue($conversationId, auth()->user());
 
+        // prompt() builds an AgentPrompt with instructions, messages, and
+        // tools, then invokes the provider gateway. The pipeline is:
+        //   RemembersConversations → RememberConversation middleware →
+        //   DatabaseConversationStore (stores user + assistant messages)
         $response = $agent->prompt($validated['message']);
 
         AgentConversation::where('id', $conversationId)
