@@ -35,5 +35,5 @@
 
 ## 6. Archive
 
-- [ ] 6.1 Archive the change to `openspec/changes/archive/YYYY-MM-DD-kan-18-tech-05-candidate-analysis-tools/`
-- [ ] 6.2 Commit and push to repository
+- [x] 6.1 Archive the change to `openspec/changes/archive/2026-06-19-kan-18-tech-05-candidate-analysis-tools/`
+- [x] 6.2 Commit and push to repository (commit e886cc6 on master)
