@@ -52,8 +52,8 @@ class ValidateStructuredAnalysis
         $this->validateStringField($data, 'justification', $errors);
         $this->validateStringArrayField($data, 'competences_extraites', $errors);
         $this->validateStringArrayField($data, 'langues', $errors, false);
-        $this->validateStringArrayField($data, 'points_forts', $errors);
-        $this->validateStringArrayField($data, 'lacunes', $errors);
+        $this->validateStringArrayField($data, 'points_forts', $errors, false);
+        $this->validateStringArrayField($data, 'lacunes', $errors, false);
         $this->validateStringArrayField($data, 'competences_manquantes', $errors, false);
         $this->validateIntegerRange($data, 'annees_experience', 0, self::MAX_YEARS_EXPERIENCE, $errors);
         $this->validateIntegerRange($data, 'matching_score', 0, 100, $errors);

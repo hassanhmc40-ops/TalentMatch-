@@ -14,6 +14,17 @@ use Illuminate\Support\Str;
 
 class JobOfferController extends Controller
 {
+    public function candidates()
+    {
+        $analyses = CandidateAnalysis::query()
+            ->whereHas('jobOffer', fn ($q) => $q->where('user_id', auth()->id()))
+            ->with(['candidate', 'jobOffer'])
+            ->orderByDesc('created_at')
+            ->paginate(15);
+
+        return view('candidats.index', compact('analyses'));
+    }
+
     public function compare(Request $request, JobOffer $offre)
     {
         Gate::authorize('view', $offre);

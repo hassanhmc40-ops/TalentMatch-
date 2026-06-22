@@ -2,11 +2,14 @@
 
 namespace App\Models;
 
+use App\Policies\ConversationPolicy;
+use Illuminate\Database\Eloquent\Attributes\UsePolicy;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 
+#[UsePolicy(ConversationPolicy::class)]
 class AgentConversation extends Model
 {
     public $incrementing = false;

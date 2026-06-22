@@ -4,7 +4,7 @@
 $links = [
     ['label' => 'Tableau de bord', 'route' => 'dashboard', 'icon' => 'dashboard', 'pattern' => 'dashboard'],
     ['label' => 'Mes offres', 'route' => 'offres.index', 'icon' => 'offres', 'pattern' => 'offres.*'],
-    ['label' => 'Candidats', 'route' => 'offres.index', 'icon' => 'candidats', 'pattern' => 'candidats.*'],
+    ['label' => 'Candidats', 'route' => 'candidats.index', 'icon' => 'candidats', 'pattern' => 'candidats.*'],
 ];
 
 $icons = [

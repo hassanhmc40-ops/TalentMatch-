@@ -127,7 +127,7 @@
                             'actions' => '<div class="flex items-center gap-3"><a href="' . route('analyses.show', [$offre, $a]) . '" class="text-primary-600 hover:text-primary-700 text-sm font-medium">Voir l\'analyse</a><span class="text-neutral-300">|</span><a href="' . route('conversations.show', [$offre, $a->candidate]) . '" class="text-primary-600 hover:text-primary-700 text-sm font-medium">Assistant →</a></div>',
                         ]);
                     @endphp
-                    <x-table :headers="$headers" :rows="$rows" :rawKeys="['select', 'score']" />
+                    <x-table :headers="$headers" :rows="$rows" :rawKeys="['select', 'score', 'actions']" />
                 @endif
             </x-card>
         </div>

@@ -3,7 +3,9 @@
 namespace App\Models;
 
 use App\Enums\Recommendation;
+use App\Policies\CandidateAnalysisPolicy;
 use Database\Factories\CandidateAnalysisFactory;
+use Illuminate\Database\Eloquent\Attributes\UsePolicy;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -26,6 +28,7 @@ use Illuminate\Support\Collection;
  * @property int $job_offer_id
  * @property int $candidate_id
  */
+#[UsePolicy(CandidateAnalysisPolicy::class)]
 class CandidateAnalysis extends Model
 {
     /** @use HasFactory<CandidateAnalysisFactory> */

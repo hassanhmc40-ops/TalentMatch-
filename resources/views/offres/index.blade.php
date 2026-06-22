@@ -37,17 +37,17 @@
                             ['key' => 'skills', 'label' => 'Compétences'],
                             ['key' => 'experience', 'label' => 'Exp. min.'],
                             ['key' => 'created', 'label' => 'Créé le'],
+                            ['key' => 'actions', 'label' => ''],
                         ]"
                         :rows="$offers->getCollection()->map(fn($o) => [
                             'title' => $o->title,
                             'skills' => implode(', ', $o->required_skills ?? []),
                             'experience' => $o->min_experience_years . ' an' . ($o->min_experience_years > 1 ? 's' : ''),
                             'created' => $o->created_at->format('d/m/Y'),
+                            'actions' => '<a href=\''.route('offres.show', $o).'\' class=\'text-primary-600 hover:text-primary-800 text-sm font-medium\'>Voir</a>',
                         ])"
+                        :raw-keys="['actions']"
                     >
-                        <x-slot name="actions">
-                            <a href="#" class="text-primary-600 hover:text-primary-800 text-sm font-medium">Voir</a>
-                        </x-slot>
                     </x-table>
 
                     <div class="mt-4">
